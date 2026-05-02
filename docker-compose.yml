@@ -22,6 +22,9 @@
       DB_NAME: dorm_db         # <--- แก้ให้ตรงกันด้วยครับ
       DB_USER: root
       DB_PASS: root_password
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
 
   # 3. ส่วนของคนดูแลตู้เซฟ (phpMyAdmin) **ต้องอยู่ใต้ services เหมือนกัน**
   phpmyadmin:

@@ -61,22 +61,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['elec_image'])) {
                             <p class="small text-primary fw-bold mt-2">หากค่าไม่ถูกต้องสามารถแก้ไขได้ทางด้านขวา</p>
 
                             <?php if ($openrouter_key): ?>
-                            <div class="mt-3">
+                            <div class="mt-3 text-start">
                                 <div id="ai-loading" class="text-center text-muted small py-1">
                                     <span class="spinner-border spinner-border-sm me-1" role="status"></span>
                                     กำลังอ่านมิเตอร์ด้วย AI...
                                 </div>
                                 <div id="ai-result" class="d-none">
                                     <div class="mb-2">
-                                        <label class="form-label small text-muted mb-1">📋 หมายเลขมิเตอร์ (NO.)</label>
-                                        <input type="text" class="form-control form-control-sm bg-light" id="ai-meter-no" readonly>
+                                        <label class="form-label fw-semibold mb-1">📋 หมายเลขมิเตอร์ (NO.)</label>
+                                        <input type="text" class="form-control bg-light fs-6" id="ai-meter-no" readonly>
                                     </div>
                                     <div>
-                                        <label class="form-label small text-muted mb-1">⚡ ค่าที่อ่านได้ (หน่วย)</label>
-                                        <input type="text" class="form-control fw-bold text-danger border-danger" id="ai-meter-val" readonly>
+                                        <label class="form-label fw-semibold mb-1">⚡ ค่าที่อ่านได้ (หน่วย)</label>
+                                        <input type="text" class="form-control fw-bold text-danger border-danger fs-5" id="ai-meter-val" readonly>
                                     </div>
                                 </div>
-                                <div id="ai-error" class="alert alert-warning mt-2 py-2 mb-0 d-none small"></div>
+                                <div id="ai-error" class="alert alert-warning mt-2 py-2 mb-0 d-none"></div>
                             </div>
                             <?php endif; ?>
                         </div>
