@@ -21,4 +21,6 @@ WORKDIR /var/www/html
 
 RUN composer install --no-dev --optimize-autoloader
 
-RUN chown -R www-data:www-data /var/www/html
+RUN mkdir -p /var/www/html/uploads && \
+    chown -R www-data:www-data /var/www/html && \
+    chmod 777 /var/www/html/uploads
