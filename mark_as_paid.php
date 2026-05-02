@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 include 'check_session.php'; // ตรวจสอบสิทธิ์ Admin
 include 'db_connect.php';    // เชื่อมต่อฐานข้อมูล
 

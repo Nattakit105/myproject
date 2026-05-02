@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // [เวอร์ชันสมบูรณ์]
 // ตรวจสอบสถานะ session ก่อนเสมอ
 if (session_status() === PHP_SESSION_NONE) {

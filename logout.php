@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 // ล้างค่า session ทั้งหมด
 session_unset();

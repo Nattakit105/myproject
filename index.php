@@ -1,4 +1,4 @@
-﻿<?php 
+<?php 
 ob_start(); 
 session_start();
 include 'db_connect.php'; 

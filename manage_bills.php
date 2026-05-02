@@ -1,4 +1,4 @@
-﻿<?php 
+<?php 
 include 'header.php'; 
 include 'check_session.php'; 
 include 'db_connect.php'; 

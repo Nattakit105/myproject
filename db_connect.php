@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * 🚩 ส่วนที่แก้ไขเพื่อ Docker
  * ใช้ getenv() ดึงค่าจากไฟล์ docker-compose.yml 

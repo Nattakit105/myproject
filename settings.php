@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 include 'header.php'; // (ต้องแก้ header.php ให้มีลิงก์มาหน้านี้ด้วย)
 include 'check_session.php'; 
 include 'db_connect.php'; // (ไฟล์นี้จะ define() ค่าปัจจุบันมาให้เรา)

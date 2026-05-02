@@ -1,4 +1,4 @@
-﻿<?php 
+<?php 
 // 1. จัดการระบบ Session และ Buffer (ต้องอยู่บรรทัดแรกสุด)
 ob_start(); 
 session_start();

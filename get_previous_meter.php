@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 include 'db_connect.php'; // เชื่อมต่อฐานข้อมูล
 
 $room = $_GET['room'] ?? '';

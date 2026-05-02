@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 include 'db_connect.php';
 
 $room = $_GET['room'] ?? '';

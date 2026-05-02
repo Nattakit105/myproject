@@ -1,4 +1,4 @@
-﻿<footer class="text-center text-muted mt-5 mb-4">
+<footer class="text-center text-muted mt-5 mb-4">
         <p>MyProject Dormitory Billing System</p>
     </footer>
     

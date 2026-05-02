@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 include 'check_session.php';
 include 'db_connect.php'; // (ไฟล์นี้จะ define() ค่าน้ำ/ไฟ)
 
