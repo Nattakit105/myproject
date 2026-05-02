@@ -10,30 +10,39 @@ $WATER_RATE_PER_PERSON = 100.00;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['elec_image'])) {
     
-    $room_number = $_POST['room_number'];
+    $room_number       = $_POST['room_number'];
     $billing_month_str = $_POST['billing_month'];
-    $room_rent = (float)$_POST['room_rent'];
-    $num_people = (int)$_POST['num_people'];
-    $elec_prev = trim($_POST['elec_prev']); 
+    $room_rent         = (float)$_POST['room_rent'];
+    $num_people        = (int)$_POST['num_people'];
+    $elec_prev         = trim($_POST['elec_prev']);
 
     // --- 1. จัดการการอัปโหลดรูปภาพ ---
-    $upload_dir = __DIR__ . '/uploads/'; 
+    $upload_dir = __DIR__ . '/uploads/';
     if (!file_exists($upload_dir)) mkdir($upload_dir, 0777, true);
     $image_name = 'meter_' . $room_number . '_' . $billing_month_str . '_' . time() . '.png';
     $image_path = $upload_dir . $image_name;
     move_uploaded_file($_FILES['elec_image']['tmp_name'], $image_path);
 
-    // --- 2. เรียกใช้งาน Python OCR ---
-    $python_executable = "C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python310\\python.exe"; 
-    $python_script_path = __DIR__ . '\\detecnum_new.py'; 
-    $tesseract_path = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"; 
-    
+    // --- 2. Python OCR ---
+    $python_executable  = "C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python310\\python.exe";
+    $python_script_path = __DIR__ . '\\detecnum_new.py';
+    $tesseract_path     = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe";
+
     $command = "$python_executable " . escapeshellarg($python_script_path) . " " . escapeshellarg($image_path) . " --tesseract " . escapeshellarg($tesseract_path);
-    $output = shell_exec($command . " 2>&1"); 
+    $output  = shell_exec($command . " 2>&1");
 
     preg_match_all('/\d{4,6}/', $output, $matches);
-    $elec_new_ocr = !empty($matches[0]) ? end($matches[0]) : "0000"; 
+    $elec_new_ocr = !empty($matches[0]) ? end($matches[0]) : "0000";
     if (strlen($elec_new_ocr) > 4) $elec_new_ocr = substr($elec_new_ocr, 0, 4);
+
+    // --- 3. เตรียม OpenRouter AI (client-side) ---
+    $openrouter_key   = defined('OPENROUTER_API_KEY') ? OPENROUTER_API_KEY : '';
+    $openrouter_model = defined('OPENROUTER_MODEL')   ? OPENROUTER_MODEL   : 'google/gemma-4-31b-it:free';
+    if ($openrouter_key) {
+        $img_info     = getimagesize($image_path);
+        $image_mime   = $img_info['mime'] ?? 'image/jpeg';
+        $image_base64 = base64_encode(file_get_contents($image_path));
+    }
     ?>
 
     <div class="container mt-4" style="max-width: 850px;">
@@ -50,6 +59,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['elec_image'])) {
                                 <img src="uploads/<?php echo $image_name; ?>" class="img-fluid rounded border shadow-sm mb-2" style="max-height: 300px; object-fit: contain;">
                             </a>
                             <p class="small text-primary fw-bold mt-2">หากค่าไม่ถูกต้องสามารถแก้ไขได้ทางด้านขวา</p>
+
+                            <?php if ($openrouter_key): ?>
+                            <div class="mt-3">
+                                <div id="ai-loading" class="text-center text-muted small py-1">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                    กำลังอ่านมิเตอร์ด้วย AI...
+                                </div>
+                                <div id="ai-result" class="d-none">
+                                    <div class="mb-2">
+                                        <label class="form-label small text-muted mb-1">📋 หมายเลขมิเตอร์ (NO.)</label>
+                                        <input type="text" class="form-control form-control-sm bg-light" id="ai-meter-no" readonly>
+                                    </div>
+                                    <div>
+                                        <label class="form-label small text-muted mb-1">⚡ ค่าที่อ่านได้ (หน่วย)</label>
+                                        <input type="text" class="form-control fw-bold text-danger border-danger" id="ai-meter-val" readonly>
+                                    </div>
+                                </div>
+                                <div id="ai-error" class="alert alert-warning mt-2 py-2 mb-0 d-none small"></div>
+                            </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="col-md-7">
@@ -151,6 +180,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['elec_image'])) {
             document.getElementById('preview_total').textContent = total.toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
         }
     }
+    <?php if ($openrouter_key): ?>
+    (function() {
+        const apiKey      = <?php echo json_encode($openrouter_key); ?>;
+        const model       = <?php echo json_encode($openrouter_model); ?>;
+        const base64Image = <?php echo json_encode($image_base64); ?>;
+        const mimeType    = <?php echo json_encode($image_mime); ?>;
+        const prompt = `คุณเป็น AI ที่เชี่ยวชาญในการอ่านมิเตอร์ไฟฟ้า\n\nจากรูปภาพนี้ กรุณาระบุ:\n1. หมายเลขมิเตอร์ (Meter No.) — ตัวเลขที่อยู่หลัง NO. ด้านล่างมิเตอร์\n2. ช่องตัวเลขบนหน้าปัด โดยแยกเป็น 2 ส่วน:\n   - white_digits: ตัวเลขในช่องพื้นขาว/ดำปกติ (อ่านจากซ้ายไปขวา ต่อกันไม่มีช่องว่าง)\n   - colored_digits: ตัวเลขในช่องที่มีกรอบหรือพื้นหลังสีแดงหรือสีน้ำเงิน\n\nตอบในรูปแบบ JSON เท่านั้น ไม่ต้องมีข้อความอื่น:\n{\n  "meter_no": "<หมายเลขมิเตอร์หรือ null>",\n  "white_digits": "<ตัวเลขในช่องพื้นขาว/ดำ เช่น 7090>",\n  "colored_digits": "<ตัวเลขในช่องสีแดง/น้ำเงิน เช่น 9>",\n  "confidence": "<high|medium|low>"\n}`;
+
+        async function readMeterWithAI() {
+            const loadingDiv = document.getElementById('ai-loading');
+            const resultDiv  = document.getElementById('ai-result');
+            const errorDiv   = document.getElementById('ai-error');
+
+            try {
+                const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': window.location.href,
+                        'X-Title': 'Dormitory Meter Reader'
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [{
+                            role: 'user',
+                            content: [
+                                { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}` } },
+                                { type: 'text', text: prompt }
+                            ]
+                        }],
+                        max_tokens: 512,
+                        temperature: 0
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err?.error?.message || `HTTP ${res.status}`);
+                }
+
+                const data    = await res.json();
+                const content = data.choices?.[0]?.message?.content || '';
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error('ไม่พบข้อมูล JSON ในคำตอบ');
+
+                const parsed  = JSON.parse(jsonMatch[0]);
+                const reading = parsed.white_digits ?? parsed.meter_reading ?? null;
+                const value   = (reading != null) ? String(parseInt(reading, 10)) : null;
+
+                if (value && value !== 'NaN') {
+                    document.getElementById('ai-meter-no').value  = parsed.meter_no || '—';
+                    document.getElementById('ai-meter-val').value = value;
+                    document.getElementById('val_new').value = value;
+                    loadingDiv.classList.add('d-none');
+                    resultDiv.classList.remove('d-none');
+                    reCalculate();
+                } else {
+                    throw new Error('อ่านค่าไม่ได้ กรุณาตรวจสอบรูปภาพ');
+                }
+            } catch(e) {
+                loadingDiv.classList.add('d-none');
+                errorDiv.textContent = '⚠️ AI: ' + e.message;
+                errorDiv.classList.remove('d-none');
+            }
+        }
+
+        window.addEventListener('load', readMeterWithAI);
+    })();
+    <?php endif; ?>
+
     window.onload = reCalculate;
     </script>
     <?php

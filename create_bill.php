@@ -1,7 +1,7 @@
 <?php
 include 'header.php'; 
 include 'check_session.php'; 
-include 'db_connect.php'; 
+include 'db_connect.php';
 
 if ($_SESSION['role'] !== 'admin') { die("Access Denied!"); }
 
@@ -115,6 +115,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
         fetchRoomInfo(prefilledRoom);
     }
 });
+
 </script>
 
 <?php include 'footer.php'; ?>

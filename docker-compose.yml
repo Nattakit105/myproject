@@ -8,12 +8,13 @@ services:
       MYSQL_DATABASE: dorm_db  # <--- ตรวจสอบให้ตรงกับ db_connect.php นะครับ
     volumes:
       - db_data:/var/lib/mysql
+      - ./dorm_db.sql.sql:/docker-entrypoint-initdb.d/init.sql
 
   # 2. ส่วนของเว็บแอปพลิเคชัน (PHP)
   app:
     build: .
     ports:
-      - "8080:80"
+      - "8082:80"
     depends_on:
       - db
     environment:
