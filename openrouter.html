@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ระบบอ่านมิเตอร์ไฟฟ้า</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      width: 100%;
+      max-width: 540px;
+      padding: 36px 32px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      color: #1a2e4a;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: #6b7a8d;
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+
+    /* API Key input */
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    input[type="password"], input[type="text"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: #1f2937;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus { border-color: #3b82f6; }
+
+    /* Upload area */
+    .upload-area {
+      border: 2px dashed #93c5fd;
+      border-radius: 12px;
+      background: #eff6ff;
+      text-align: center;
+      padding: 32px 20px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      margin-bottom: 18px;
+      position: relative;
+    }
+
+    .upload-area:hover, .upload-area.dragover {
+      background: #dbeafe;
+      border-color: #3b82f6;
+    }
+
+    .upload-area input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon { font-size: 2.5rem; margin-bottom: 8px; }
+
+    .upload-text { color: #3b82f6; font-weight: 600; font-size: 0.95rem; }
+    .upload-hint { color: #9ca3af; font-size: 0.8rem; margin-top: 4px; }
+
+    #preview-wrap { margin-bottom: 18px; text-align: center; display: none; }
+    #preview-wrap img {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 10px;
+      border: 1.5px solid #e5e7eb;
+      object-fit: contain;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:hover:not(:disabled) { background: #1d4ed8; }
+    .btn:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    /* Spinner */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 3px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Result */
+    #result {
+      margin-top: 24px;
+      display: none;
+    }
+
+    .result-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #6b7a8d;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .result-box {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .result-box .label {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .result-box .value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #1e40af;
+      word-break: break-all;
+    }
+
+    .result-box.meter-no .value { font-size: 1.1rem; color: #059669; }
+
+    /* Error */
+    .error-box {
+      background: #fef2f2;
+      border: 1.5px solid #fca5a5;
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: #b91c1c;
+      font-size: 0.9rem;
+      margin-top: 14px;
+      display: none;
+    }
+
+    /* Raw */
+    .raw-box {
+      margin-top: 14px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.8rem;
+      color: #475569;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 22px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>⚡ ระบบอ่านมิเตอร์ไฟฟ้า</h1>
+  <p class="subtitle">อัปโหลดรูปภาพมิเตอร์ — AI จะอ่านค่าและหมายเลขมิเตอร์ให้อัตโนมัติ</p>
+
+  <div class="field">
+    <label for="api-key">OpenRouter API Key</label>
+    <input type="password" id="api-key" placeholder="sk-or-v1-..." autocomplete="off" />
+  </div>
+
+  <div class="field">
+    <label for="model-select">Model</label>
+    <select id="model-select" style="width:100%;padding:10px 14px;border:1.5px solid #d1d5db;border-radius:8px;font-size:0.95rem;color:#1f2937;outline:none;">
+      <option value="baidu/qianfan-ocr-fast:free">🆓 Baidu Qianfan OCR Fast (แนะนำ — OCR โดยเฉพาะ)</option>
+      <option value="google/gemma-4-31b-it:free">🆓 Google Gemma 4 31B</option>
+      <option value="google/gemma-4-26b-a4b-it:free">🆓 Google Gemma 4 26B</option>
+      <option value="tencent/hy3-preview:free">🆓 Tencent Hy3 Preview</option>
+      <option value="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free">🆓 NVIDIA Nemotron 3 Nano Omni</option>
+    </select>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="upload-area" id="upload-area">
+    <input type="file" id="file-input" accept="image/*" />
+    <div class="upload-icon">📷</div>
+    <div class="upload-text">คลิกหรือลากไฟล์รูปภาพมาวางที่นี่</div>
+    <div class="upload-hint">รองรับ JPG, PNG, WEBP, GIF</div>
+  </div>
+
+  <div id="preview-wrap">
+    <img id="preview-img" src="" alt="preview" />
+  </div>
+
+  <button class="btn" id="analyze-btn" disabled>
+    <div class="spinner" id="spinner"></div>
+    <span id="btn-text">อ่านมิเตอร์</span>
+  </button>
+
+  <div class="error-box" id="error-box"></div>
+
+  <div id="result">
+    <hr class="divider" />
+    <div class="result-title">ผลการอ่านมิเตอร์</div>
+    <div class="result-grid">
+      <div class="result-box">
+        <span class="label">หมายเลขมิเตอร์ (No.)</span>
+        <div class="value" id="out-meter-no">—</div>
+      </div>
+      <div class="result-box">
+        <span class="label">ค่าการใช้ไฟฟ้า (หน่วย)</span>
+        <div class="value" id="out-meter-val">—</div>
+      </div>
+    </div>
+    <div class="raw-box" id="out-raw"></div>
+  </div>
+</div>
+
+<script>
+  const fileInput   = document.getElementById('file-input');
+  const uploadArea  = document.getElementById('upload-area');
+  const previewWrap = document.getElementById('preview-wrap');
+  const previewImg  = document.getElementById('preview-img');
+  const analyzeBtn  = document.getElementById('analyze-btn');
+  const spinner     = document.getElementById('spinner');
+  const btnText     = document.getElementById('btn-text');
+  const errorBox    = document.getElementById('error-box');
+  const resultBox   = document.getElementById('result');
+  const outNo       = document.getElementById('out-meter-no');
+  const outVal      = document.getElementById('out-meter-val');
+  const outRaw      = document.getElementById('out-raw');
+  const apiKeyInput = document.getElementById('api-key');
+
+  let base64Image = null;
+  let mimeType    = 'image/jpeg';
+
+  // Drag & drop
+  uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+    fileInput.value = '';
+  });
+
+  function handleFile(file) {
+    if (!file.type.startsWith('image/')) return showError('กรุณาเลือกไฟล์รูปภาพเท่านั้น');
+    mimeType = file.type;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const dataUrl = e.target.result;
+      base64Image = dataUrl.split(',')[1];
+      previewImg.src = dataUrl;
+      previewWrap.style.display = 'block';
+      analyzeBtn.disabled = false;
+      hideError();
+      resultBox.style.display = 'none';
+      outNo.textContent  = '—';
+      outVal.textContent = '—';
+      outRaw.textContent = '';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  analyzeBtn.addEventListener('click', analyze);
+
+  async function analyze() {
+    const apiKey = apiKeyInput.value.trim();
+    const model  = document.getElementById('model-select').value;
+
+    if (!apiKey) return showError('กรุณาใส่ OpenRouter API Key ก่อน');
+    if (!base64Image) return showError('กรุณาเลือกรูปภาพก่อน');
+
+    setLoading(true);
+    hideError();
+    resultBox.style.display = 'none';
+
+    const prompt = `คุณเป็น AI ที่เชี่ยวชาญในการอ่านมิเตอร์ไฟฟ้า
+
+จากรูปภาพนี้ กรุณาระบุ:
+1. หมายเลขมิเตอร์ (Meter No.) — ตัวเลขที่อยู่หลัง NO. ด้านล่างมิเตอร์
+2. ช่องตัวเลขบนหน้าปัด โดยแยกเป็น 2 ส่วน:
+   - white_digits: ตัวเลขในช่องพื้นขาว/ดำปกติ (อ่านจากซ้ายไปขวา ต่อกันไม่มีช่องว่าง)
+   - colored_digits: ตัวเลขในช่องที่มีกรอบหรือพื้นหลังสีแดงหรือสีน้ำเงิน (อ่านจากซ้ายไปขวา)
+
+ตอบในรูปแบบ JSON เท่านั้น ไม่ต้องมีข้อความอื่น:
+{
+  "meter_no": "<หมายเลขมิเตอร์หรือ null>",
+  "white_digits": "<ตัวเลขในช่องพื้นขาว/ดำ เช่น 7090>",
+  "colored_digits": "<ตัวเลขในช่องสีแดง/น้ำเงิน เช่น 9>",
+  "confidence": "<high|medium|low>"
+}`;
+
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.href,
+          'X-Title': 'Meter Reader'
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}` } },
+                { type: 'text', text: prompt }
+              ]
+            }
+          ],
+          max_tokens: 512,
+          temperature: 0
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content || '';
+      outRaw.textContent = content;
+
+      // Parse JSON from response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('ไม่พบข้อมูล JSON ในคำตอบ:\n' + content);
+
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      outNo.textContent  = parsed.meter_no ?? '—';
+      const reading = parsed.white_digits ?? parsed.meter_reading ?? null;
+      outVal.textContent = reading != null ? String(parseInt(reading, 10)) : '—';
+
+      resultBox.style.display = 'block';
+    } catch (e) {
+      showError('เกิดข้อผิดพลาด: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function setLoading(on) {
+    analyzeBtn.disabled = on;
+    spinner.style.display = on ? 'block' : 'none';
+    btnText.textContent = on ? 'กำลังอ่านมิเตอร์...' : 'อ่านมิเตอร์';
+  }
+
+  function showError(msg) {
+    errorBox.textContent = '⚠️ ' + msg;
+    errorBox.style.display = 'block';
+  }
+
+  function hideError() {
+    errorBox.style.display = 'none';
+  }
+</script>
+</body>
+</html>
