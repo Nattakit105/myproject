@@ -50,12 +50,18 @@ if ($selected_month) {
     }
 }
 
-// ข้อมูลกราฟภาพรวมหอพัก
+// ข้อมูลกราฟภาพรวมหอพัก (12 เดือนย้อนหลังจากเดือนที่เลือก)
 $graph_labels = []; $graph_elec = []; $graph_water = [];
-$sql_trend = "SELECT DATE_FORMAT(billing_month, '%Y-%m') as mk, SUM(elec_cost) as te, SUM(water_cost) as tw 
-              FROM billing_records GROUP BY mk ORDER BY mk ASC LIMIT 12";
-$res_trend = $conn->query($sql_trend);
-while($tr = $res_trend->fetch_assoc()){
+$trend_end = date("Y-m-t", strtotime($selected_month . '-01'));
+$sql_trend = "SELECT DATE_FORMAT(billing_month, '%Y-%m') as mk, SUM(elec_cost) as te, SUM(water_cost) as tw
+              FROM billing_records WHERE billing_month <= ?
+              GROUP BY mk ORDER BY mk DESC LIMIT 12";
+$stmt_trend = $conn->prepare($sql_trend);
+$stmt_trend->bind_param("s", $trend_end);
+$stmt_trend->execute();
+$trend_rows = array_reverse($stmt_trend->get_result()->fetch_all(MYSQLI_ASSOC));
+$stmt_trend->close();
+foreach ($trend_rows as $tr){
     $p = explode('-', $tr['mk']);
     $graph_labels[] = $thai_short[$p[1]] . " " . (substr($p[0] + 543, 2));
     $graph_elec[] = $tr['te'];
@@ -81,15 +87,18 @@ while($rm = $room_q->fetch_assoc()){ $rooms_list[] = $rm['room_number']; }
 <div class="container-fluid mt-4 px-md-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <h1 class="h3 mb-0 text-primary fw-bold"><i class="bi bi-bar-chart-line-fill me-2"></i>สรุปสาธารณูปโภค</h1>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+        <a href="print_utilities.php?month=<?php echo urlencode($selected_month); ?>" target="_blank" class="btn btn-sm btn-outline-light"><i class="bi bi-printer me-1"></i>พิมพ์ PDF</a>
         <form action="" method="GET" class="d-flex align-items-center bg-dark p-2 rounded shadow-sm border border-secondary">
             <label class="me-2 mb-0 small fw-bold text-white">รอบเดือน:</label>
             <select name="month" class="form-select form-select-sm border-0 fw-bold bg-transparent text-white" onchange="this.form.submit()">
-                <?php foreach ($available_months as $m): 
+                <?php foreach ($available_months as $m):
                     $p = explode('-', $m); $m_th = $thai_months[$p[1]]; $y_th = $p[0] + 543; ?>
                     <option value="<?php echo $m; ?>" <?php echo ($selected_month == $m) ? 'selected' : ''; ?> class="text-dark"><?php echo "$m_th $y_th"; ?></option>
                 <?php endforeach; ?>
             </select>
         </form>
+        </div>
     </div>
 
     <!-- แถบสถิติ -->
