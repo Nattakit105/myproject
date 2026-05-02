@@ -145,7 +145,7 @@ $stmt->close();
                                             <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" style="font-size: 0.7rem;">ยกเลิกจ่าย</button>
                                         </form>
                                     <?php else: ?>
-                                        <form action="mark_paid.php" method="POST" class="d-inline">
+                                        <form action="mark_paid.php" method="POST" class="d-inline" onsubmit="return confirm('ยืนยันการรับชำระเงินห้อง <?php echo htmlspecialchars($row['room_number']); ?>?')">
                                             <input type="hidden" name="record_id" value="<?php echo $row['id']; ?>">
                                             <input type="hidden" name="month" value="<?php echo $selected_month; ?>">
                                             <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm" style="font-size: 0.7rem;">ยืนยันการชำระ</button>

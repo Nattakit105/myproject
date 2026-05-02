@@ -138,7 +138,11 @@ $html = '
 </body>
 </html>';
 
+$mpdf_tmp = '/tmp/mpdf';
+if (!is_dir($mpdf_tmp)) mkdir($mpdf_tmp, 0777, true);
+
 $mpdf = new \Mpdf\Mpdf([
+    'tempDir' => $mpdf_tmp,
     'fontDir' => array_merge((new Mpdf\Config\ConfigVariables())->getDefaults()['fontDir'], [__DIR__ . '/custom_fonts']),
     'fontdata' => (new Mpdf\Config\FontVariables())->getDefaults()['fontdata'] + [
         'thsarabun' => [
