@@ -68,9 +68,9 @@ foreach ($trend_rows as $tr){
     $graph_water[] = $tr['tw'];
 }
 
-// ดึงรายชื่อห้องทั้งหมดสำหรับตัวเลือกกราฟรายห้อง
+// ดึงเฉพาะห้องที่มีข้อมูลบิลจริงสำหรับตัวเลือกกราฟรายห้อง
 $rooms_list = [];
-$room_q = $conn->query("SELECT DISTINCT room_number FROM rooms ORDER BY CAST(room_number AS UNSIGNED) ASC");
+$room_q = $conn->query("SELECT DISTINCT room_number FROM billing_records ORDER BY CAST(room_number AS UNSIGNED) ASC");
 while($rm = $room_q->fetch_assoc()){ $rooms_list[] = $rm['room_number']; }
 ?>
 
@@ -189,13 +189,17 @@ while($rm = $room_q->fetch_assoc()){ $rooms_list[] = $rm['room_number']; }
         <div class="card-body py-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h6 class="fw-bold mb-0 text-white"><i class="bi bi-house-door-fill me-2 text-primary"></i>แนวโน้มค่าใช้จ่ายรายห้อง (ย้อนหลัง 12 เดือน)</h6>
-                <div style="width: 180px;">
-                    <select id="roomSelector" class="form-select form-select-sm form-select-dark" onchange="loadRoomChart(this.value)">
-                        <?php foreach($rooms_list as $rm): ?>
-                            <option value="<?= $rm ?>"><?= "ห้อง " . $rm ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                <?php if (!empty($rooms_list)): ?>
+                    <div style="width: 180px;">
+                        <select id="roomSelector" class="form-select form-select-sm form-select-dark" onchange="loadRoomChart(this.value)">
+                            <?php foreach($rooms_list as $rm): ?>
+                                <option value="<?= htmlspecialchars($rm) ?>"><?= "ห้อง " . htmlspecialchars($rm) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                <?php else: ?>
+                    <span class="small text-muted">ยังไม่มีข้อมูลรายห้อง</span>
+                <?php endif; ?>
             </div>
             <div style="height: 350px;"><canvas id="roomChart"></canvas></div>
         </div>
@@ -280,7 +284,9 @@ function loadRoomChart(room) {
 }
 
 window.onload = () => {
-    const defaultRoom = document.getElementById('roomSelector').value;
+    const selector = document.getElementById('roomSelector');
+    if (!selector) return;
+    const defaultRoom = selector.value;
     if(defaultRoom) loadRoomChart(defaultRoom);
 };
 </script>

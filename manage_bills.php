@@ -9,7 +9,11 @@ if ($_SESSION['role'] !== 'admin') { die("Access Denied!"); }
 $thai_months = ["01" => "มกราคม", "02" => "กุมภาพันธ์", "03" => "มีนาคม", "04" => "เมษายน", "05" => "พฤษภาคม", "06" => "มิถุนายน", "07" => "กรกฎาคม", "08" => "สิงหาคม", "09" => "กันยายน", "10" => "ตุลาคม", "11" => "พฤศจิกายน", "12" => "ธันวาคม"];
 
 $selected_year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
-$selected_month = isset($_GET['month']) ? $_GET['month'] : date('Y-m');
+$requested_month = isset($_GET['month']) && preg_match('/^\d{4}-\d{2}$/', $_GET['month'])
+    ? $_GET['month']
+    : date('Y-m');
+$selected_month_num = substr($requested_month, 5, 2);
+$selected_month = sprintf('%04d-%02d', $selected_year, (int)$selected_month_num);
 
 // 2. ดึงข้อมูลเดือนที่มีการบันทึกบิลไว้
 $active_months = [];
@@ -40,6 +44,20 @@ $stmt->execute();
 $result = $stmt->get_result();
 while($row = $result->fetch_assoc()) { $records[] = $row; }
 $stmt->close();
+
+function meter_image_url($path) {
+    $path = trim((string)$path);
+    if ($path === '') {
+        return '';
+    }
+
+    $path = str_replace('\\', '/', $path);
+    if (preg_match('#^(https?://|/)#', $path)) {
+        return $path;
+    }
+
+    return strpos($path, '/') !== false ? $path : 'uploads/' . $path;
+}
 ?>
 
 <style>
@@ -135,8 +153,87 @@ $stmt->close();
     .billing-table .tool-btn-print i { color: #2563eb !important; }
     .billing-table .tool-btn-edit,
     .billing-table .tool-btn-edit i { color: #ca8a04 !important; }
+    .billing-table .tool-btn-image,
+    .billing-table .tool-btn-image i { color: #16a34a !important; }
     .billing-table .tool-btn-delete,
     .billing-table .tool-btn-delete i { color: #dc2626 !important; }
+    .billing-table .tool-btn:disabled {
+        opacity: 0.38;
+        cursor: not-allowed;
+    }
+    .meter-image-modal .modal-content {
+        background: #ffffff;
+        color: #0f172a;
+        border: 0;
+        border-radius: 1rem;
+    }
+    .meter-image-preview {
+        max-height: 72vh;
+        width: 100%;
+        object-fit: contain;
+        background: #f8fafc;
+    }
+    .meter-meta {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .meter-meta-item {
+        background: #f8fafc;
+        border: 1px solid #d9e2ec;
+        border-radius: 10px;
+        padding: 8px 10px;
+    }
+    .meter-meta-label {
+        color: #64748b;
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+    .meter-meta-value {
+        color: #0f172a;
+        font-weight: 800;
+    }
+    @media (max-width: 767.98px) {
+        .meter-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .bill-breakdown {
+        min-width: 230px;
+        max-width: 300px;
+        color: #0f172a;
+        font-size: 0.78rem;
+        line-height: 1.35;
+    }
+    .bill-breakdown-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 2px 0;
+    }
+    .bill-breakdown-label {
+        color: #475569;
+        text-align: left;
+    }
+    .bill-breakdown-value {
+        color: #0f172a;
+        font-weight: 700;
+        white-space: nowrap;
+        text-align: right;
+    }
+    .bill-breakdown-total {
+        margin-top: 4px;
+        padding-top: 5px;
+        border-top: 1px solid #d9e2ec;
+    }
+    .bill-breakdown-total .bill-breakdown-label,
+    .bill-breakdown-total .bill-breakdown-value {
+        color: #0f172a;
+        font-size: 0.9rem;
+        font-weight: 800;
+    }
     .bill-header-actions { justify-content: flex-end; }
     .print-all-btn {
         min-height: 44px;
@@ -224,8 +321,8 @@ $stmt->close();
             <?php endif; ?>
             <div class="bill-year-nav d-flex align-items-center gap-2 rounded-pill shadow-sm px-3 py-2">
                 <span class="bill-year-label small">ประจำปี พ.ศ. <?php echo $selected_year+543; ?></span>
-                <a href="?year=<?php echo $selected_year-1; ?>&month=<?php echo $selected_month; ?>" class="bill-year-btn" title="ปีก่อนหน้า" aria-label="ปีก่อนหน้า"><i class="bi bi-chevron-left"></i></a>
-                <a href="?year=<?php echo $selected_year+1; ?>&month=<?php echo $selected_month; ?>" class="bill-year-btn" title="ปีถัดไป" aria-label="ปีถัดไป"><i class="bi bi-chevron-right"></i></a>
+                <a href="?year=<?php echo $selected_year-1; ?>&month=<?php echo ($selected_year-1) . '-' . $selected_month_num; ?>" class="bill-year-btn" title="ปีก่อนหน้า" aria-label="ปีก่อนหน้า"><i class="bi bi-chevron-left"></i></a>
+                <a href="?year=<?php echo $selected_year+1; ?>&month=<?php echo ($selected_year+1) . '-' . $selected_month_num; ?>" class="bill-year-btn" title="ปีถัดไป" aria-label="ปีถัดไป"><i class="bi bi-chevron-right"></i></a>
             </div>
         </div>
     </div>
@@ -255,7 +352,7 @@ $stmt->close();
                         <tr class="text-muted small">
                             <th class="ps-4 py-3">ห้อง</th>
                             <th>ผู้เช่า (ประวัติในบิล)</th>
-                            <th class="text-end">ยอดสุทธิ</th>
+                            <th>รายการ</th>
                             <th class="text-center">สถานะบิล</th>
                             <th class="text-center">ข้อมูลการชำระ</th>
                             <th class="text-center">การจัดการ</th>
@@ -269,6 +366,13 @@ $stmt->close();
                             <?php foreach ($records as $row): 
                                 $display_name = !empty($row['tenant_name']) ? $row['tenant_name'] : ($row['renter_name'] ?? '(ย้ายออกแล้ว)');
                                 $is_paid = ($row['status'] == 'paid' || !empty($row['payment_date']));
+                                $meter_image = meter_image_url($row['elec_image_path'] ?? '');
+                                $bill_month_label = '';
+                                if (!empty($row['billing_month'])) {
+                                    $bill_time = strtotime($row['billing_month']);
+                                    $bill_month_num = date('m', $bill_time);
+                                    $bill_month_label = ($thai_months[$bill_month_num] ?? date('F', $bill_time)) . ' ' . ((int)date('Y', $bill_time) + 543);
+                                }
                             ?>
                             <tr>
                                 <td class="ps-4 fw-bold h5 mb-0 text-primary"><?php echo htmlspecialchars($row["room_number"]); ?></td>
@@ -276,7 +380,26 @@ $stmt->close();
                                     <div class="fw-bold"><?php echo htmlspecialchars($display_name); ?></div>
                                     <div class="text-muted" style="font-size: 0.7rem;">ID: #<?php echo $row['id']; ?></div>
                                 </td>
-                                <td class="text-end fw-bold text-dark">฿<?php echo number_format($row["total_cost"], 2); ?></td>
+                                <td>
+                                    <div class="bill-breakdown">
+                                        <div class="bill-breakdown-row">
+                                            <span class="bill-breakdown-label">ค่าเช่าห้องพัก</span>
+                                            <span class="bill-breakdown-value">฿<?php echo number_format($row["room_rent"], 2); ?></span>
+                                        </div>
+                                        <div class="bill-breakdown-row">
+                                            <span class="bill-breakdown-label">ค่าน้ำประปา (เหมาจ่าย <?php echo (int)$row["num_people"]; ?> คน)</span>
+                                            <span class="bill-breakdown-value">฿<?php echo number_format($row["water_cost"], 2); ?></span>
+                                        </div>
+                                        <div class="bill-breakdown-row">
+                                            <span class="bill-breakdown-label">ค่าไฟฟ้าประจำเดือน (<?php echo number_format($row["elec_units"], 1); ?> หน่วย)</span>
+                                            <span class="bill-breakdown-value">฿<?php echo number_format($row["elec_cost"], 2); ?></span>
+                                        </div>
+                                        <div class="bill-breakdown-row bill-breakdown-total">
+                                            <span class="bill-breakdown-label">ยอดสุทธิ</span>
+                                            <span class="bill-breakdown-value">฿<?php echo number_format($row["total_cost"], 2); ?></span>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td class="text-center">
                                     <span class="badge-status <?php echo $is_paid ? 'bg-paid' : 'bg-pending'; ?>">
                                         <?php echo $is_paid ? 'ชำระแล้ว' : 'ค้างชำระ'; ?>
@@ -312,6 +435,15 @@ $stmt->close();
                                     <div class="d-flex justify-content-center gap-1">
                                         <a href="generate_invoice.php?id=<?php echo $row['id']; ?>" class="btn btn-sm tool-btn tool-btn-print" title="พิมพ์ใบเสร็จ" target="_blank"><i class="bi bi-printer"></i></a>
                                         <a href="edit.php?id=<?php echo $row['id']; ?>" class="btn btn-sm tool-btn tool-btn-edit" title="แก้ไขบิล"><i class="bi bi-pencil-square"></i></a>
+                                        <?php if ($meter_image !== ''): ?>
+                                            <button type="button" class="btn btn-sm tool-btn tool-btn-image js-meter-image" title="ดูรูปมิเตอร์" data-image-url="<?php echo htmlspecialchars($meter_image, ENT_QUOTES, 'UTF-8'); ?>" data-room="<?php echo htmlspecialchars($row['room_number'], ENT_QUOTES, 'UTF-8'); ?>" data-tenant="<?php echo htmlspecialchars($display_name, ENT_QUOTES, 'UTF-8'); ?>" data-bill-id="<?php echo htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8'); ?>" data-bill-month="<?php echo htmlspecialchars($bill_month_label, ENT_QUOTES, 'UTF-8'); ?>">
+                                                <i class="bi bi-image"></i>
+                                            </button>
+                                        <?php else: ?>
+                                            <button type="button" class="btn btn-sm tool-btn tool-btn-image" title="ไม่มีรูปมิเตอร์" disabled>
+                                                <i class="bi bi-image"></i>
+                                            </button>
+                                        <?php endif; ?>
                                         <form action="delete.php" method="POST" class="d-inline" onsubmit="return confirm('ลบบิลถาวร?')">
                                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>"><input type="hidden" name="month" value="<?php echo $selected_month; ?>">
                                             <button type="submit" class="btn btn-sm tool-btn tool-btn-delete" title="ลบ"><i class="bi bi-trash"></i></button>
@@ -327,5 +459,76 @@ $stmt->close();
         </div>
     </div>
 </div>
+
+<div class="modal fade meter-image-modal" id="meterImageModal" tabindex="-1" aria-labelledby="meterImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="meterImageModalLabel">รูปมิเตอร์</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="meter-meta">
+                    <div class="meter-meta-item">
+                        <span class="meter-meta-label">ห้อง</span>
+                        <span class="meter-meta-value" id="meterMetaRoom">-</span>
+                    </div>
+                    <div class="meter-meta-item">
+                        <span class="meter-meta-label">ชื่อผู้เช่า</span>
+                        <span class="meter-meta-value" id="meterMetaTenant">-</span>
+                    </div>
+                    <div class="meter-meta-item">
+                        <span class="meter-meta-label">Bill ID</span>
+                        <span class="meter-meta-value" id="meterMetaBillId">-</span>
+                    </div>
+                    <div class="meter-meta-item">
+                        <span class="meter-meta-label">เดือน / ปี</span>
+                        <span class="meter-meta-value" id="meterMetaMonth">-</span>
+                    </div>
+                </div>
+                <img id="meterImagePreview" class="meter-image-preview rounded border" src="" alt="รูปมิเตอร์">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modalElement = document.getElementById('meterImageModal');
+    const modalTitle = document.getElementById('meterImageModalLabel');
+    const modalImage = document.getElementById('meterImagePreview');
+    const metaRoom = document.getElementById('meterMetaRoom');
+    const metaTenant = document.getElementById('meterMetaTenant');
+    const metaBillId = document.getElementById('meterMetaBillId');
+    const metaMonth = document.getElementById('meterMetaMonth');
+    if (!modalElement || !modalImage || typeof bootstrap === 'undefined') return;
+
+    const meterModal = new bootstrap.Modal(modalElement);
+    document.querySelectorAll('.js-meter-image').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const imageUrl = this.getAttribute('data-image-url') || '';
+            const room = this.getAttribute('data-room') || '';
+            const tenant = this.getAttribute('data-tenant') || '-';
+            const billId = this.getAttribute('data-bill-id') || '-';
+            const billMonth = this.getAttribute('data-bill-month') || '-';
+            modalTitle.textContent = room ? 'รูปมิเตอร์ห้อง ' + room : 'รูปมิเตอร์';
+            if (metaRoom) metaRoom.textContent = room || '-';
+            if (metaTenant) metaTenant.textContent = tenant;
+            if (metaBillId) metaBillId.textContent = '#' + billId;
+            if (metaMonth) metaMonth.textContent = billMonth;
+            modalImage.src = imageUrl;
+            meterModal.show();
+        });
+    });
+
+    modalElement.addEventListener('hidden.bs.modal', function() {
+        modalImage.src = '';
+        if (metaRoom) metaRoom.textContent = '-';
+        if (metaTenant) metaTenant.textContent = '-';
+        if (metaBillId) metaBillId.textContent = '-';
+        if (metaMonth) metaMonth.textContent = '-';
+    });
+});
+</script>
 
 <?php $conn->close(); include 'footer.php'; ?>
