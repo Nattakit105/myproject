@@ -50,7 +50,7 @@ foreach ($details as $row) {
         <td style="text-align:center;">' . $i++ . '</td>
         <td style="text-align:center;font-weight:bold;">' . htmlspecialchars($row['room_number']) . '</td>
         <td>' . htmlspecialchars($name) . '</td>
-        <td style="text-align:center;">' . htmlspecialchars($row['elec_prev']) . ' → ' . htmlspecialchars($row['elec_new']) . '</td>
+        <td style="text-align:center;">' . htmlspecialchars($row['elec_prev']) . ' - ' . htmlspecialchars($row['elec_new']) . '</td>
         <td style="text-align:center;">' . number_format($row['elec_units'], 1) . '</td>
         <td style="text-align:right;">' . number_format($row['elec_cost'], 2) . '</td>
         <td style="text-align:right;">' . number_format($row['water_cost'], 2) . '</td>
@@ -119,7 +119,7 @@ $html = '
                 <th>#</th>
                 <th>ห้อง</th>
                 <th>ชื่อผู้เช่า</th>
-                <th>มิเตอร์ (ก่อน→หลัง)</th>
+                <th>มิเตอร์เดิม - ใหม่</th>
                 <th>หน่วย</th>
                 <th>ค่าไฟ (บาท)</th>
                 <th>ค่าน้ำ (บาท)</th>

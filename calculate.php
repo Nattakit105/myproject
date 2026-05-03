@@ -5,8 +5,51 @@ include 'db_connect.php';
 
 if ($_SESSION['role'] !== 'admin') { die("Access Denied!"); }
 
-$ELEC_RATE = 8.00; 
-$WATER_RATE_PER_PERSON = 100.00;
+function setting_float($constant_name, $default_value) {
+    return (defined($constant_name) && is_numeric(constant($constant_name)))
+        ? (float) constant($constant_name)
+        : $default_value;
+}
+
+function extract_meter_reading($image_path) {
+    $python_env = trim((string) getenv('OCR_PYTHON'));
+    $python_candidates = $python_env !== '' ? [$python_env] : ['python', 'python3'];
+    $python_script_path = __DIR__ . DIRECTORY_SEPARATOR . 'detecnum_new.py';
+    $tesseract_path = trim((string) getenv('TESSERACT_CMD'));
+
+    foreach ($python_candidates as $python_executable) {
+        $command = escapeshellarg($python_executable) . ' ' .
+            escapeshellarg($python_script_path) . ' ' .
+            escapeshellarg($image_path);
+
+        if ($tesseract_path !== '') {
+            $command .= ' --tesseract ' . escapeshellarg($tesseract_path);
+        }
+
+        $output = shell_exec($command . ' 2>&1');
+        if (!is_string($output) || trim($output) === '') {
+            continue;
+        }
+
+        foreach (preg_split('/\R/', trim($output)) as $line) {
+            $line = trim($line);
+            if (preg_match('/^\d{3,6}$/', $line)) {
+                return strlen($line) > 4 ? substr($line, 0, 4) : str_pad($line, 4, '0', STR_PAD_LEFT);
+            }
+        }
+
+        preg_match_all('/\d{4,6}/', $output, $matches);
+        if (!empty($matches[0])) {
+            $reading = end($matches[0]);
+            return strlen($reading) > 4 ? substr($reading, 0, 4) : $reading;
+        }
+    }
+
+    return "0000";
+}
+
+$ELEC_RATE = setting_float('ELECTRICITY_RATE_PER_UNIT', 8.00);
+$WATER_RATE_PER_PERSON = setting_float('WATER_RATE_PER_PERSON', 100.00);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['elec_image'])) {
     
@@ -17,28 +60,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['elec_image'])) {
     $elec_prev         = trim($_POST['elec_prev']);
 
     // --- 1. จัดการการอัปโหลดรูปภาพ ---
-    $upload_dir = __DIR__ . '/uploads/';
+    $upload_dir = __DIR__ . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
     if (!file_exists($upload_dir)) mkdir($upload_dir, 0777, true);
     $image_name = 'meter_' . $room_number . '_' . $billing_month_str . '_' . time() . '.png';
     $image_path = $upload_dir . $image_name;
-    move_uploaded_file($_FILES['elec_image']['tmp_name'], $image_path);
+    $upload_ok = isset($_FILES['elec_image']['error'])
+        && $_FILES['elec_image']['error'] === UPLOAD_ERR_OK
+        && move_uploaded_file($_FILES['elec_image']['tmp_name'], $image_path);
+    if (!$upload_ok) {
+        $image_name = '';
+    }
 
     // --- 2. Python OCR ---
-    $python_executable  = "C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python310\\python.exe";
-    $python_script_path = __DIR__ . '\\detecnum_new.py';
-    $tesseract_path     = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe";
-
-    $command = "$python_executable " . escapeshellarg($python_script_path) . " " . escapeshellarg($image_path) . " --tesseract " . escapeshellarg($tesseract_path);
-    $output  = shell_exec($command . " 2>&1");
-
-    preg_match_all('/\d{4,6}/', $output, $matches);
-    $elec_new_ocr = !empty($matches[0]) ? end($matches[0]) : "0000";
-    if (strlen($elec_new_ocr) > 4) $elec_new_ocr = substr($elec_new_ocr, 0, 4);
+    $elec_new_ocr = $upload_ok ? extract_meter_reading($image_path) : "0000";
 
     // --- 3. เตรียม OpenRouter AI (client-side) ---
     $openrouter_key   = defined('OPENROUTER_API_KEY') ? OPENROUTER_API_KEY : '';
     $openrouter_model = defined('OPENROUTER_MODEL')   ? OPENROUTER_MODEL   : 'google/gemma-4-31b-it:free';
-    if ($openrouter_key) {
+    if ($upload_ok && $openrouter_key) {
         $img_info     = getimagesize($image_path);
         $image_mime   = $img_info['mime'] ?? 'image/jpeg';
         $image_base64 = base64_encode(file_get_contents($image_path));
@@ -55,16 +94,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['elec_image'])) {
                     <div class="row g-4">
                         <div class="col-md-5 text-center border-end">
                             <h6 class="text-secondary fw-bold mb-3">รูปถ่ายมิเตอร์จริง</h6>
+                            <?php if ($upload_ok): ?>
                             <a href="uploads/<?php echo $image_name; ?>" target="_blank">
                                 <img src="uploads/<?php echo $image_name; ?>" class="img-fluid rounded border shadow-sm mb-2" style="max-height: 300px; object-fit: contain;">
                             </a>
+                            <?php else: ?>
+                            <div class="alert alert-warning text-start">
+                                อัปโหลดรูปไม่สำเร็จ ระบบจะใส่ค่าเริ่มต้นเป็น 0000 ให้แก้ไขเองก่อนบันทึก
+                            </div>
+                            <?php endif; ?>
                             <p class="small text-primary fw-bold mt-2">หากค่าไม่ถูกต้องสามารถแก้ไขได้ทางด้านขวา</p>
 
                             <?php if ($openrouter_key): ?>
                             <div class="mt-3 text-start">
-                                <div id="ai-loading" class="text-center text-muted small py-1">
-                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                                    กำลังอ่านมิเตอร์ด้วย AI...
+                                <div id="ai-loading" class="border rounded-3 p-3 bg-light">
+                                    <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                                            <span class="fw-semibold text-primary">AI กำลังอ่านมิเตอร์</span>
+                                        </div>
+                                        <span id="ai-progress-percent" class="small fw-bold text-primary">15%</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div id="ai-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 15%;"></div>
+                                    </div>
+                                    <div id="ai-progress-text" class="small text-muted mt-2">กำลังส่งรูปให้ AI ตรวจสอบ...</div>
                                 </div>
                                 <div id="ai-result" class="d-none">
                                     <div class="mb-2">
@@ -188,12 +242,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['elec_image'])) {
         const mimeType    = <?php echo json_encode($image_mime); ?>;
         const prompt = `คุณเป็น AI ที่เชี่ยวชาญในการอ่านมิเตอร์ไฟฟ้า\n\nจากรูปภาพนี้ กรุณาระบุ:\n1. หมายเลขมิเตอร์ (Meter No.) — ตัวเลขที่อยู่หลัง NO. ด้านล่างมิเตอร์\n2. ช่องตัวเลขบนหน้าปัด โดยแยกเป็น 2 ส่วน:\n   - white_digits: ตัวเลขในช่องพื้นขาว/ดำปกติ (อ่านจากซ้ายไปขวา ต่อกันไม่มีช่องว่าง)\n   - colored_digits: ตัวเลขในช่องที่มีกรอบหรือพื้นหลังสีแดงหรือสีน้ำเงิน\n\nตอบในรูปแบบ JSON เท่านั้น ไม่ต้องมีข้อความอื่น:\n{\n  "meter_no": "<หมายเลขมิเตอร์หรือ null>",\n  "white_digits": "<ตัวเลขในช่องพื้นขาว/ดำ เช่น 7090>",\n  "colored_digits": "<ตัวเลขในช่องสีแดง/น้ำเงิน เช่น 9>",\n  "confidence": "<high|medium|low>"\n}`;
 
+        function setAiProgress(percent, message) {
+            const bar = document.getElementById('ai-progress-bar');
+            const percentText = document.getElementById('ai-progress-percent');
+            const statusText = document.getElementById('ai-progress-text');
+            if (bar) bar.style.width = percent + '%';
+            if (percentText) percentText.textContent = percent + '%';
+            if (statusText) statusText.textContent = message;
+        }
+
         async function readMeterWithAI() {
             const loadingDiv = document.getElementById('ai-loading');
             const resultDiv  = document.getElementById('ai-result');
             const errorDiv   = document.getElementById('ai-error');
+            let progressTimer = null;
 
             try {
+                const progressSteps = [
+                    { percent: 28, text: 'กำลังอัปโหลดรูปไปยัง OpenRouter...' },
+                    { percent: 48, text: 'AI กำลังวิเคราะห์ช่องตัวเลขบนมิเตอร์...' },
+                    { percent: 68, text: 'กำลังแยกเลขมิเตอร์และเลขหน่วยไฟ...' },
+                    { percent: 82, text: 'กำลังรอคำตอบจากโมเดล...' }
+                ];
+                let progressIndex = 0;
+                progressTimer = window.setInterval(function() {
+                    const step = progressSteps[Math.min(progressIndex, progressSteps.length - 1)];
+                    setAiProgress(step.percent, step.text);
+                    progressIndex++;
+                }, 900);
+
                 const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -222,6 +299,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['elec_image'])) {
                 }
 
                 const data    = await res.json();
+                setAiProgress(92, 'ได้รับคำตอบแล้ว กำลังตรวจรูปแบบข้อมูล...');
                 const content = data.choices?.[0]?.message?.content || '';
                 const jsonMatch = content.match(/\{[\s\S]*\}/);
                 if (!jsonMatch) throw new Error('ไม่พบข้อมูล JSON ในคำตอบ');
@@ -231,6 +309,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['elec_image'])) {
                 const value   = (reading != null) ? String(parseInt(reading, 10)) : null;
 
                 if (value && value !== 'NaN') {
+                    if (progressTimer) window.clearInterval(progressTimer);
+                    setAiProgress(100, 'อ่านค่าสำเร็จ');
                     document.getElementById('ai-meter-no').value  = parsed.meter_no || '—';
                     document.getElementById('ai-meter-val').value = value;
                     document.getElementById('val_new').value = value;
@@ -241,6 +321,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['elec_image'])) {
                     throw new Error('อ่านค่าไม่ได้ กรุณาตรวจสอบรูปภาพ');
                 }
             } catch(e) {
+                if (progressTimer) window.clearInterval(progressTimer);
                 loadingDiv.classList.add('d-none');
                 errorDiv.textContent = '⚠️ AI: ' + e.message;
                 errorDiv.classList.remove('d-none');

@@ -33,13 +33,20 @@ for ($i = 5; $i >= 0; $i--) {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-    body { background-color: #0f172a; color: #f8fafc; font-family: 'Kanit', sans-serif; }
+    html[data-theme="dark"] body { background-color: #0f172a !important; color: #f8fafc !important; font-family: 'Kanit', sans-serif; }
+    html[data-theme="light"] body { background-color: #f4f7fb !important; color: #0f172a !important; font-family: 'Kanit', sans-serif; }
     .stat-card { background: #1e293b; border: none; border-radius: 1.25rem; padding: 1.5rem; transition: 0.3s; }
+    html[data-theme="light"] .stat-card { background: #ffffff; color: #0f172a; box-shadow: 0 12px 24px -18px rgba(15,23,42,0.35); }
     .stat-card:hover { transform: translateY(-5px); background: #26334d; }
+    html[data-theme="light"] .stat-card:hover { background: #f8fafc; }
     .text-muted-custom { color: #94a3b8; font-size: 0.85rem; }
+    html[data-theme="light"] .text-muted-custom { color: #64748b; }
     .chart-container { background: #1e293b; border-radius: 1.5rem; padding: 2rem; }
+    html[data-theme="light"] .chart-container { background: #ffffff; color: #0f172a; box-shadow: 0 12px 24px -18px rgba(15,23,42,0.35); }
     .btn-quick { background: #334155; color: #fff; border: none; border-radius: 12px; padding: 12px; text-align: left; transition: 0.2s; }
     .btn-quick:hover { background: #475569; padding-left: 20px; }
+    html[data-theme="light"] .btn-quick { background: #eef2f7; color: #0f172a; }
+    html[data-theme="light"] .btn-quick:hover { background: #e2e8f0; }
 </style>
 
 <div class="container-fluid mt-4 px-md-5">
@@ -136,3 +143,5 @@ new Chart(ctx, {
     }
 });
 </script>
+
+<?php $conn->close(); include 'footer.php'; ?>

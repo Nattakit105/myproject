@@ -61,8 +61,8 @@ foreach($all_rooms as $room) {
 ?>
 
 <style>
-    /* 🎨 บังคับตัวหนังสือขาวทั้งระบบ (ยกเว้นกล่องสีขาว) */
-    body, h1, h2, h3, h4, h5, h6, p, span, label, .nav-link { color: #ffffff !important; }
+    html[data-theme="dark"] body { color: #ffffff; }
+    html[data-theme="light"] body { color: #0f172a; }
 
     /* 🏹 ส่วนเลือกเดือน (Pill) */
     .filter-pill { 
@@ -78,24 +78,101 @@ foreach($all_rooms as $room) {
         padding-right: 2.5rem !important;
     }
     .form-select-custom option { background-color: #1e293b; color: #fff; }
+    html[data-theme="light"] .filter-pill {
+        background: #ffffff;
+        border-color: #cbd5e1;
+    }
+    html[data-theme="light"] .filter-pill label,
+    html[data-theme="light"] .form-select-custom {
+        color: #0f172a !important;
+    }
+    html[data-theme="light"] .form-select-custom {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%230f172a' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    }
+    html[data-theme="light"] .form-select-custom option { background-color: #ffffff; color: #0f172a; }
 
     /* 🏠 การ์ดห้องพัก */
-    .room-card { border-radius: 1.5rem; transition: 0.3s; border: 3px solid transparent; }
+    .room-card { border-radius: 1.5rem; transition: 0.3s; border: 4px solid transparent !important; }
     .room-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
 
     /* ⚪ สีห้องว่าง (ขาว/ดำ) | 🌑 สีห้องมีคน (เทาเข้ม) */
     .bg-empty-white { background-color: #ffffff !important; }
     .bg-empty-white h5, .bg-empty-white span, .bg-empty-white i, .bg-empty-white div { color: #0f172a !important; }
     .bg-occupied-dark { background-color: #1e293b !important; }
+    .bg-occupied-dark h5, .bg-occupied-dark span, .bg-occupied-dark i, .bg-occupied-dark div { color: #ffffff !important; }
+    html[data-theme="light"] .room-card.bg-occupied-dark,
+    html[data-theme="dark"] .room-card.bg-occupied-dark { background-color: #1e293b !important; }
+    html[data-theme="light"] .room-card.bg-empty-white,
+    html[data-theme="dark"] .room-card.bg-empty-white { background-color: #ffffff !important; }
 
     /* สีกรอบสถานะบิล */
-    .border-success { border-color: #10b981 !important; }
-    .border-danger { border-color: #ef4444 !important; }
-    .border-warning { border-color: #f59e0b !important; }
+    .border-success { border-color: #00c781 !important; }
+    .border-danger { border-color: #ff3b4f !important; }
+    .border-warning { border-color: #ff9f00 !important; }
     .border-empty { border-color: #cbd5e1 !important; }
+    html[data-theme="dark"] .border-empty { border-color: #94a3b8 !important; }
 
     /* 💡 กล่องสถิติพิเศษ */
     .bg-occupied-grey { background-color: #1e293b !important; } /* สีเทาเข้มแบบเดิม */
+    .bg-occupied-grey h6, .bg-occupied-grey span { color: #ffffff !important; }
+    .row.g-3.mb-4 .bg-success h6,
+    .row.g-3.mb-4 .bg-success span,
+    .row.g-3.mb-4 .bg-danger h6,
+    .row.g-3.mb-4 .bg-danger span,
+    .row.g-3.mb-4 .bg-primary h6,
+    .row.g-3.mb-4 .bg-primary span { color: #ffffff !important; }
+    .row.g-3.mb-4 .bg-warning h6,
+    .row.g-3.mb-4 .bg-warning span { color: #0f172a !important; }
+    html[data-theme="light"] .card.bg-white.bg-opacity-10 { background-color: #ffffff !important; }
+    html[data-theme="light"] .card.bg-white.bg-opacity-10 span { color: #0f172a !important; }
+    .room-legend-card {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border-radius: 1rem !important;
+        box-shadow: 0 10px 24px -16px rgba(15,23,42,0.45);
+    }
+    .room-legend {
+        gap: 1rem 1.35rem !important;
+        font-size: 1.18rem;
+        line-height: 1.2;
+    }
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        color: #0f172a !important;
+        white-space: nowrap;
+    }
+    .legend-swatch {
+        width: 28px;
+        height: 28px;
+        display: inline-block;
+        border-radius: 8px;
+        flex: 0 0 28px;
+    }
+    .legend-dot {
+        font-size: 1.65rem;
+        line-height: 1;
+    }
+    .legend-occupied { background: #1e293b; border: 3px solid #64748b; }
+    .legend-empty { background: #ffffff; border: 3px solid #64748b; }
+    html[data-theme="dark"] .room-legend-card {
+        background: #1e293b !important;
+        color: #f8fafc !important;
+        border: 1px solid #334155;
+    }
+    html[data-theme="light"] .room-legend-card { background: #ffffff !important; color: #0f172a !important; }
+    html[data-theme="dark"] .room-legend-card .legend-item,
+    html[data-theme="dark"] .room-legend-card .legend-item span:not(.legend-dot):not(.legend-swatch) {
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] .room-legend-card .legend-empty { border-color: #e2e8f0; }
+    html[data-theme="dark"] .room-legend-card .text-success { color: #22c55e !important; }
+    html[data-theme="dark"] .room-legend-card .text-danger { color: #ef4444 !important; }
+    html[data-theme="dark"] .room-legend-card .text-warning { color: #f59e0b !important; }
+    html[data-theme="light"] .room-legend-card .text-success { color: #15803d !important; }
+    html[data-theme="light"] .room-legend-card .text-danger { color: #dc2626 !important; }
+    html[data-theme="light"] .room-legend-card .text-warning { color: #b45309 !important; }
 </style>
 
 <div class="container-fluid mt-4 px-md-5">
@@ -127,14 +204,14 @@ foreach($all_rooms as $room) {
         <div class="col-md-2 col-4"><div class="card border-0 bg-primary bg-opacity-75"><div class="card-body p-2"><h6>รวมทั้งหมด</h6><span class="h3 fw-bold"><?php echo count($all_rooms); ?></span></div></div></div>
     </div>
 
-    <div class="card bg-white bg-opacity-10 border-0 mb-4 rounded-pill">
+    <div class="card room-legend-card border-0 mb-4">
         <div class="card-body py-2 text-center">
-            <div class="d-flex flex-wrap justify-content-center gap-3 small fw-bold">
-                <span><div class="p-1 px-2 d-inline-block rounded bg-occupied-dark border border-light" style="width:15px; height:15px;"></div> เทา: มีผู้เช่า</span>
-                <span><div class="p-1 px-2 d-inline-block rounded bg-empty-white border border-secondary" style="width:15px; height:15px;"></div> ขาว: ห้องว่าง</span>
-                <span class="text-success">● จ่ายแล้ว</span>
-                <span class="text-danger">● ค้างชำระ</span>
-                <span class="text-warning">● รอสร้างบิล</span>
+            <div class="room-legend d-flex flex-wrap justify-content-center fw-bold">
+                <span class="legend-item"><span class="legend-swatch legend-occupied"></span>เทา: มีผู้เช่า</span>
+                <span class="legend-item"><span class="legend-swatch legend-empty"></span>ขาว: ห้องว่าง</span>
+                <span class="legend-item"><span class="legend-dot text-success">●</span>จ่ายแล้ว</span>
+                <span class="legend-item"><span class="legend-dot text-danger">●</span>ค้างชำระ</span>
+                <span class="legend-item"><span class="legend-dot text-warning">●</span>รอสร้างบิล</span>
             </div>
         </div>
     </div>

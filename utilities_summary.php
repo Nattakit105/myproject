@@ -76,22 +76,89 @@ while($rm = $room_q->fetch_assoc()){ $rooms_list[] = $rm['room_number']; }
 
 <!-- ส่วนแสดงผล HTML และ CSS (สไตล์ Gritty Dark) -->
 <style>
-    body { background-color: #0f172a; color: #fff; font-family: 'Kanit', sans-serif; }
+    html[data-theme="dark"] body { background-color: #0f172a !important; color: #fff !important; font-family: 'Kanit', sans-serif; }
+    html[data-theme="light"] body { background-color: #f4f7fb !important; color: #0f172a !important; font-family: 'Kanit', sans-serif; }
     .card-stat { border: none; border-radius: 1rem; transition: 0.3s; }
     .card-dark { background: #1e293b; border: none; border-radius: 1.2rem; }
-    .table-modern thead { background-color: #1e293b; color: #94a3b8; }
-    .table-modern td { color: #f8fafc; border-color: rgba(255,255,255,0.05); }
+    html[data-theme="light"] .card-dark { background: #ffffff !important; color: #0f172a !important; box-shadow: 0 12px 24px -18px rgba(15,23,42,0.35); }
+    .table-modern thead { background-color: #ffffff; color: #64748b; }
+    .table-modern th { background-color: #ffffff !important; color: #64748b !important; border-color: #d9e2ec !important; }
+    .table-modern td { background-color: #ffffff !important; color: #0f172a !important; border-color: #d9e2ec !important; }
+    .table-modern .text-dark,
+    .table-modern .fw-bold:not(.text-primary):not(.text-danger) { color: #0f172a !important; }
+    .table-modern .text-primary { color: #2563eb !important; }
+    .table-modern .text-danger { color: #e11d48 !important; }
+    .table-modern.table-hover tbody tr:hover td { background-color: #f8fafc !important; }
+    html[data-theme="dark"] .table-modern td,
+    html[data-theme="dark"] .table-modern .text-dark,
+    html[data-theme="dark"] .table-modern .fw-bold:not(.text-primary):not(.text-danger) {
+        color: #0f172a !important;
+    }
+    html[data-theme="dark"] .table-modern .text-primary { color: #2563eb !important; }
+    html[data-theme="dark"] .table-modern .text-danger { color: #e11d48 !important; }
+    html[data-theme="dark"] .card.card-dark .table.table-modern td.utility-units,
+    html[data-theme="dark"] .card.card-dark .table.table-modern td.utility-units.text-dark {
+        color: #0f172a !important;
+    }
+    html[data-theme="light"] .table-modern thead { background-color: #eef2f7 !important; color: #475569 !important; }
+    html[data-theme="light"] .table-modern td { color: #0f172a !important; border-color: rgba(15,23,42,0.08) !important; }
     .form-select-dark { background: #334155; color: white; border: 1px solid #475569; }
+    .utility-toolbar { min-height: 44px; }
+    .utility-print-btn,
+    .utility-month-form { min-height: 44px; }
+    .utility-month-form {
+        background: #1e293b;
+        border: 1px solid #64748b;
+        border-radius: 999px !important;
+    }
+    .utility-month-label { white-space: nowrap; line-height: 1; }
+    .utility-month-select {
+        min-width: 170px;
+        background-color: transparent !important;
+        color: #fff !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding-left: 0.25rem;
+    }
+    .utility-print-btn {
+        border-color: #94a3b8;
+        color: #f8fafc;
+        background: transparent;
+        border-radius: 999px;
+    }
+    .utility-print-btn:hover { border-color: #3b82f6; color: #ffffff; background: #2563eb; }
+    html[data-theme="light"] .utility-print-btn {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 8px 18px -14px rgba(15,23,42,0.45);
+    }
+    html[data-theme="light"] .utility-print-btn:hover {
+        background: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #2563eb !important;
+    }
+    html[data-theme="light"] .utility-month-form { background: #ffffff; border-color: #cbd5e1; }
+    html[data-theme="light"] .utility-month-select { background-color: transparent !important; color: #0f172a !important; }
+    html[data-theme="light"] .card-dark .text-white { color: #0f172a !important; }
+    .utility-month-select:focus { box-shadow: none; border-color: transparent; }
+    .utility-month-select option { color: #111827; background: #fff; }
+    @media (max-width: 575.98px) {
+        .utility-toolbar { width: 100%; }
+        .utility-print-btn,
+        .utility-month-form { width: 100%; justify-content: center; }
+        .utility-month-select { flex: 1; min-width: 0; }
+    }
 </style>
 
 <div class="container-fluid mt-4 px-md-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <h1 class="h3 mb-0 text-primary fw-bold"><i class="bi bi-bar-chart-line-fill me-2"></i>สรุปสาธารณูปโภค</h1>
-        <div class="d-flex gap-2 align-items-center flex-wrap">
-        <a href="print_utilities.php?month=<?php echo urlencode($selected_month); ?>" target="_blank" class="btn btn-sm btn-outline-light"><i class="bi bi-printer me-1"></i>พิมพ์ PDF</a>
-        <form action="" method="GET" class="d-flex align-items-center bg-dark p-2 rounded shadow-sm border border-secondary">
-            <label class="me-2 mb-0 small fw-bold text-white">รอบเดือน:</label>
-            <select name="month" class="form-select form-select-sm border-0 fw-bold bg-transparent text-white" onchange="this.form.submit()">
+        <div class="utility-toolbar d-flex gap-2 align-items-center flex-wrap">
+        <a href="print_utilities.php?month=<?php echo urlencode($selected_month); ?>" target="_blank" class="utility-print-btn btn btn-outline-light d-inline-flex align-items-center px-3 fw-bold"><i class="bi bi-printer me-1"></i>พิมพ์ PDF</a>
+        <form action="" method="GET" class="utility-month-form d-flex align-items-center shadow-sm px-3 py-2">
+            <label class="utility-month-label me-2 mb-0 small fw-bold text-white" for="utilityMonth">รอบเดือน:</label>
+            <select id="utilityMonth" name="month" class="utility-month-select form-select form-select-sm border-0 fw-bold" onchange="this.form.submit()">
                 <?php foreach ($available_months as $m):
                     $p = explode('-', $m); $m_th = $thai_months[$p[1]]; $y_th = $p[0] + 543; ?>
                     <option value="<?php echo $m; ?>" <?php echo ($selected_month == $m) ? 'selected' : ''; ?> class="text-dark"><?php echo "$m_th $y_th"; ?></option>
@@ -150,7 +217,7 @@ while($rm = $room_q->fetch_assoc()){ $rooms_list[] = $rm['room_number']; }
                             <td>
                                 <div class="fw-bold text-dark"><?php echo htmlspecialchars($display_name); ?></div>
                             </td>
-                            <td class="text-center text-dark"><?php echo number_format($row['elec_units'], 1); ?></td>
+                            <td class="text-center text-dark utility-units"><?php echo number_format($row['elec_units'], 1); ?></td>
                             <td class="text-end text-danger fw-bold ">฿<?php echo number_format($row['elec_cost'], 2); ?></td>
                             <td class="text-end text-primary fw-bold pe-4 ">฿<?php echo number_format($row['water_cost'], 2); ?></td>
                         </tr>

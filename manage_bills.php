@@ -43,12 +43,38 @@ $stmt->close();
 ?>
 
 <style>
-    body { background-color: #f1f5f9; font-family: 'Kanit', sans-serif; }
+    html[data-theme="dark"] body { background-color: #0f172a !important; color: #f8fafc !important; font-family: 'Kanit', sans-serif; }
+    html[data-theme="light"] body { background-color: #f1f5f9 !important; color: #0f172a !important; font-family: 'Kanit', sans-serif; }
     .card-modern { border: none; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    html[data-theme="dark"] .card-modern { background: #1e293b !important; color: #f8fafc !important; }
+    html[data-theme="light"] .card-modern { background: #ffffff !important; color: #0f172a !important; }
     .month-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
     @media (max-width: 768px) { .month-grid { grid-template-columns: repeat(3, 1fr); } }
-    .month-item { padding: 12px 5px; border-radius: 0.75rem; text-align: center; border: 1px solid #e2e8f0; background: white; color: #64748b; transition: 0.2s; text-decoration: none; font-size: 0.8rem; }
-    .month-item.active { background: #3b82f6; color: white; border-color: #3b82f6; font-weight: bold; }
+    .month-item { padding: 12px 5px; border-radius: 0.75rem; text-align: center; border: 1px solid #e2e8f0; background: white; color: #64748b; transition: 0.2s ease; text-decoration: none; font-size: 0.8rem; }
+    html[data-theme="dark"] .month-item { background: #0f172a; border-color: #334155; color: #cbd5e1; }
+    html[data-theme="light"] .month-item { background: #ffffff; border-color: #e2e8f0; color: #475569; }
+    .month-item:hover,
+    .month-item:focus {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #60a5fa;
+        box-shadow: 0 10px 22px -14px rgba(37, 99, 235, 0.9);
+        transform: translateY(-2px);
+        outline: none;
+    }
+    .month-item.active {
+        background: #3b82f6;
+        color: white;
+        border-color: #93c5fd;
+        font-weight: bold;
+        box-shadow: 0 0 0 2px rgba(147, 197, 253, 0.45), 0 12px 24px -16px rgba(37, 99, 235, 0.95);
+    }
+    .month-item.active:hover,
+    .month-item.active:focus {
+        background: #1d4ed8;
+        border-color: #bfdbfe;
+        color: #ffffff;
+    }
     .month-item.has-data { border-bottom: 3px solid #10b981; }
     
     .badge-status { border-radius: 2rem; padding: 0.4rem 1rem; font-size: 0.75rem; font-weight: bold; display: inline-block; }
@@ -56,20 +82,150 @@ $stmt->close();
     .bg-pending { background: #fee2e2; color: #b91c1c; }
     
     .text-payment-info { font-size: 0.75rem; color: #64748b; line-height: 1.2; }
-    .section-title { color: #1e293b; font-weight: 700; border-left: 5px solid #3b82f6; padding-left: 15px; }
+    .section-title { color: var(--text-main); font-weight: 700; border-left: 5px solid #3b82f6; padding-left: 15px; }
+    .page-subtitle { color: var(--text-muted) !important; }
+    html[data-theme="dark"] .page-subtitle { color: #cbd5e1 !important; }
+    html[data-theme="light"] .page-subtitle { color: #64748b !important; }
+    html[data-theme="dark"] .table { color: #f8fafc !important; }
+    html[data-theme="dark"] .billing-table thead th { background: #ffffff !important; color: #64748b !important; border-color: #d9e2ec !important; }
+    html[data-theme="dark"] .billing-table tbody td { background: #ffffff !important; color: #0f172a !important; border-color: #d9e2ec !important; }
+    html[data-theme="dark"] .billing-table .text-dark { color: #0f172a !important; }
+    html[data-theme="dark"] .table .text-muted,
+    html[data-theme="dark"] .text-payment-info { color: #64748b !important; }
+    html[data-theme="light"] .table { color: #0f172a !important; }
+    html[data-theme="light"] .billing-table thead th { background: #ffffff !important; color: #64748b !important; border-color: #d9e2ec !important; }
+    html[data-theme="light"] .billing-table tbody td { background: #ffffff !important; color: #0f172a !important; border-color: #d9e2ec !important; }
+    .billing-table .fw-bold:not(.text-primary):not(.text-success):not(.text-danger):not(.text-warning) { color: #0f172a !important; }
+    .billing-table .badge-status { color: inherit !important; }
+    .billing-table .bg-paid { background: #dcfce7 !important; color: #15803d !important; }
+    .billing-table .bg-pending { background: #fee2e2 !important; color: #b91c1c !important; }
+    html[data-theme="light"] .btn-white,
+    html[data-theme="light"] .btn-light { background: #ffffff !important; color: #0f172a !important; }
+    html[data-theme="dark"] .btn-white,
+    html[data-theme="dark"] .btn-light { background: #334155 !important; color: #f8fafc !important; border-color: #475569 !important; }
+    html[data-theme="dark"] .btn-light.text-primary,
+    html[data-theme="dark"] .billing-table .btn-light.text-primary,
+    html[data-theme="light"] .billing-table .btn-light.text-primary { color: #2563eb !important; border-color: #cbd5e1 !important; }
+    html[data-theme="dark"] .btn-light.text-warning,
+    html[data-theme="dark"] .billing-table .btn-light.text-warning,
+    html[data-theme="light"] .billing-table .btn-light.text-warning { color: #ca8a04 !important; border-color: #cbd5e1 !important; }
+    html[data-theme="dark"] .btn-light.text-danger,
+    html[data-theme="dark"] .billing-table .btn-light.text-danger,
+    html[data-theme="light"] .billing-table .btn-light.text-danger { color: #dc2626 !important; border-color: #cbd5e1 !important; }
+    html[data-theme="dark"] .billing-table .btn-light:hover,
+    html[data-theme="light"] .billing-table .btn-light:hover {
+        background: #eef6ff !important;
+        border-color: #93c5fd !important;
+    }
+    .billing-table .tool-btn {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .billing-table .tool-btn:hover {
+        background: #eef6ff !important;
+        border-color: #93c5fd !important;
+    }
+    .billing-table .tool-btn-print,
+    .billing-table .tool-btn-print i { color: #2563eb !important; }
+    .billing-table .tool-btn-edit,
+    .billing-table .tool-btn-edit i { color: #ca8a04 !important; }
+    .billing-table .tool-btn-delete,
+    .billing-table .tool-btn-delete i { color: #dc2626 !important; }
+    .bill-header-actions { justify-content: flex-end; }
+    .print-all-btn {
+        min-height: 44px;
+        border-radius: 999px;
+        border-color: #64748b;
+        color: #f8fafc;
+        background: transparent;
+    }
+    .print-all-btn:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #ffffff;
+    }
+    html[data-theme="light"] .print-all-btn {
+        background: #ffffff;
+        color: #0f172a;
+        border-color: #cbd5e1;
+    }
+    html[data-theme="light"] .print-all-btn:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #ffffff;
+    }
+    .bill-year-nav {
+        min-height: 44px;
+        background: #1e293b;
+        border: 1px solid #64748b;
+        color: #f8fafc;
+    }
+    .bill-year-label {
+        white-space: nowrap;
+        line-height: 1;
+        font-weight: 700;
+        color: inherit;
+    }
+    .bill-year-btn {
+        width: 34px;
+        height: 30px;
+        border-radius: 8px;
+        border: 1px solid rgba(148, 163, 184, 0.55);
+        color: #f8fafc;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: 0.2s ease;
+    }
+    .bill-year-btn:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #ffffff;
+    }
+    html[data-theme="light"] .bill-year-nav {
+        background: #ffffff;
+        border-color: #cbd5e1;
+        color: #0f172a;
+    }
+    html[data-theme="light"] .bill-year-btn {
+        color: #0f172a;
+        border-color: #cbd5e1;
+    }
+    html[data-theme="light"] .bill-year-btn:hover {
+        color: #ffffff;
+        background: #2563eb;
+        border-color: #2563eb;
+    }
+    @media (max-width: 575.98px) {
+        .bill-header-actions { width: 100%; justify-content: stretch; }
+        .bill-year-nav,
+        .print-all-btn { width: 100%; justify-content: center; }
+    }
 </style>
 
 <div class="container-fluid mt-4 px-md-4">
     <div class="d-flex flex-wrap justify-content-between align-items-end mb-3 gap-3">
         <div>
             <h4 class="section-title mb-1">บันทึกการชำระเงินและติดตามสถานะ</h4>
-            <p class="text-muted small mb-0 ms-4">จัดการประวัติ ยืนยันการรับชำระ และตรวจสอบเวลาเข้าจ่ายเงิน</p>
+            <p class="page-subtitle small mb-0 ms-4">จัดการประวัติ ยืนยันการรับชำระ และตรวจสอบเวลาเข้าจ่ายเงิน</p>
         </div>
-        <div class="text-end">
-            <h6 class="fw-bold mb-2 text-secondary">ประจำปี พ.ศ. <?php echo $selected_year+543; ?></h6>
-            <div class="btn-group shadow-sm">
-                <a href="?year=<?php echo $selected_year-1; ?>&month=<?php echo $selected_month; ?>" class="btn btn-sm btn-white bg-white border"><i class="bi bi-chevron-left"></i></a>
-                <a href="?year=<?php echo $selected_year+1; ?>&month=<?php echo $selected_month; ?>" class="btn btn-sm btn-white bg-white border"><i class="bi bi-chevron-right"></i></a>
+        <div class="bill-header-actions d-flex align-items-center gap-2 flex-wrap">
+            <?php if (!empty($records)): ?>
+                <a href="generate_invoices.php?month=<?php echo urlencode($selected_month); ?>" target="_blank" class="print-all-btn btn btn-outline-light d-inline-flex align-items-center px-3 fw-bold">
+                    <i class="bi bi-printer-fill me-1"></i> พิมพ์ทั้งหมด
+                </a>
+            <?php endif; ?>
+            <div class="bill-year-nav d-flex align-items-center gap-2 rounded-pill shadow-sm px-3 py-2">
+                <span class="bill-year-label small">ประจำปี พ.ศ. <?php echo $selected_year+543; ?></span>
+                <a href="?year=<?php echo $selected_year-1; ?>&month=<?php echo $selected_month; ?>" class="bill-year-btn" title="ปีก่อนหน้า" aria-label="ปีก่อนหน้า"><i class="bi bi-chevron-left"></i></a>
+                <a href="?year=<?php echo $selected_year+1; ?>&month=<?php echo $selected_month; ?>" class="bill-year-btn" title="ปีถัดไป" aria-label="ปีถัดไป"><i class="bi bi-chevron-right"></i></a>
             </div>
         </div>
     </div>
@@ -94,7 +250,7 @@ $stmt->close();
     <div class="card card-modern overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table align-middle mb-0">
+                <table class="table align-middle mb-0 billing-table">
                     <thead class="bg-light">
                         <tr class="text-muted small">
                             <th class="ps-4 py-3">ห้อง</th>
@@ -154,11 +310,11 @@ $stmt->close();
                                 </td>
                                 <td class="text-center pe-4">
                                     <div class="d-flex justify-content-center gap-1">
-                                        <a href="generate_invoice.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-light border text-primary" title="พิมพ์ใบเสร็จ" target="_blank"><i class="bi bi-printer"></i></a>
-                                        <a href="edit.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-light border text-warning" title="แก้ไขบิล"><i class="bi bi-pencil-square"></i></a>
+                                        <a href="generate_invoice.php?id=<?php echo $row['id']; ?>" class="btn btn-sm tool-btn tool-btn-print" title="พิมพ์ใบเสร็จ" target="_blank"><i class="bi bi-printer"></i></a>
+                                        <a href="edit.php?id=<?php echo $row['id']; ?>" class="btn btn-sm tool-btn tool-btn-edit" title="แก้ไขบิล"><i class="bi bi-pencil-square"></i></a>
                                         <form action="delete.php" method="POST" class="d-inline" onsubmit="return confirm('ลบบิลถาวร?')">
                                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>"><input type="hidden" name="month" value="<?php echo $selected_month; ?>">
-                                            <button type="submit" class="btn btn-sm btn-light border text-danger" title="ลบ"><i class="bi bi-trash"></i></button>
+                                            <button type="submit" class="btn btn-sm tool-btn tool-btn-delete" title="ลบ"><i class="bi bi-trash"></i></button>
                                         </form>
                                     </div>
                                 </td>

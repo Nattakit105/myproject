@@ -22,7 +22,7 @@ $conn->close();
             <h1 class="h4 mb-0"><i class="bi bi-calculator me-2"></i>บันทึกบิลใหม่</h1>
         </div>
         <div class="card-body p-4">
-            <form action="calculate.php" method="post" enctype="multipart/form-data">
+            <form action="calculate.php" method="post" enctype="multipart/form-data" id="meterUploadForm">
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label class="form-label fw-bold">เลือกห้องพัก</label>
@@ -64,9 +64,27 @@ $conn->close();
                 </div>
 
                 <div class="d-grid">
-                    <button type="submit" class="btn btn-primary btn-lg shadow fw-bold">คำนวณค่าห้อง</button>
+                    <button type="submit" class="btn btn-primary btn-lg shadow fw-bold" id="calculateBtn">คำนวณค่าห้อง</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<div id="processingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="background: rgba(15, 23, 42, 0.78); z-index: 2000;">
+    <div class="d-flex align-items-center justify-content-center h-100 px-3">
+        <div class="bg-white rounded-3 shadow-lg p-4 w-100" style="max-width: 460px;">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+                <div>
+                    <h2 class="h5 mb-1 fw-bold text-primary">กำลังประมวลผลรูปมิเตอร์</h2>
+                    <div class="text-muted small">อัปโหลดรูปและอ่านตัวเลขด้วยระบบ OCR/AI</div>
+                </div>
+            </div>
+            <div class="progress" style="height: 10px;">
+                <div id="processingBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 20%;"></div>
+            </div>
+            <div id="processingText" class="small text-secondary mt-3">กำลังเตรียมข้อมูล...</div>
         </div>
     </div>
 </div>
@@ -114,6 +132,30 @@ window.addEventListener('DOMContentLoaded', (event) => {
     if(prefilledRoom) {
         fetchRoomInfo(prefilledRoom);
     }
+});
+
+document.getElementById('meterUploadForm').addEventListener('submit', function() {
+    const overlay = document.getElementById('processingOverlay');
+    const bar = document.getElementById('processingBar');
+    const text = document.getElementById('processingText');
+    const btn = document.getElementById('calculateBtn');
+    const steps = [
+        { width: 35, text: 'กำลังอัปโหลดรูปมิเตอร์...' },
+        { width: 62, text: 'กำลังอ่านตัวเลขจากรูป...' },
+        { width: 84, text: 'กำลังเตรียมหน้าตรวจสอบผลลัพธ์...' }
+    ];
+    let index = 0;
+
+    overlay.classList.remove('d-none');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>กำลังคำนวณ...';
+
+    window.setInterval(function() {
+        const step = steps[Math.min(index, steps.length - 1)];
+        bar.style.width = step.width + '%';
+        text.textContent = step.text;
+        index++;
+    }, 900);
 });
 
 </script>

@@ -6,6 +6,10 @@ include 'header.php';
 
 if ($_SESSION['role'] !== 'admin') { die("Access Denied!"); }
 
+function e($value) {
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+}
+
 function generate_password($length = 6) {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyz';
     $password = '';
@@ -62,32 +66,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_tenant'])) {
 
 // ส่วนลบข้อมูล
 if (isset($_GET['delete_id'])) {
-    $id = $_GET['delete_id'];
-    $conn->query("DELETE FROM users WHERE id = $id AND role = 'tenant'");
-    $_SESSION['success_message'] = "ลบบัญชีสำเร็จ";
+    $id = filter_input(INPUT_GET, 'delete_id', FILTER_VALIDATE_INT);
+    if ($id === false || $id === null) {
+        $_SESSION['error_message'] = "รหัสผู้เข้าพักไม่ถูกต้อง";
+    } else {
+        $stmt = $conn->prepare("DELETE FROM users WHERE id = ? AND role = 'tenant'");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
+        $_SESSION['success_message'] = "ลบบัญชีสำเร็จ";
+    }
     header("Location: manage_tenants.php"); exit();
 }
 
 // ส่วนรีเซ็ตรหัสผ่าน
 if (isset($_GET['reset_id'])) {
-    $id = $_GET['reset_id'];
-    $new_pw = generate_password();
-    $hashed = password_hash($new_pw, PASSWORD_DEFAULT);
-    $conn->query("UPDATE users SET password = '$hashed', plain_password = '$new_pw' WHERE id = $id");
-    $_SESSION['success_message'] = "รีเซ็ตรหัสผ่านใหม่สำเร็จ: $new_pw";
+    $id = filter_input(INPUT_GET, 'reset_id', FILTER_VALIDATE_INT);
+    if ($id === false || $id === null) {
+        $_SESSION['error_message'] = "รหัสผู้เข้าพักไม่ถูกต้อง";
+    } else {
+        $new_pw = generate_password();
+        $hashed = password_hash($new_pw, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare("UPDATE users SET password = ?, plain_password = ? WHERE id = ? AND role = 'tenant'");
+        $stmt->bind_param("ssi", $hashed, $new_pw, $id);
+        $stmt->execute();
+        $stmt->close();
+        $_SESSION['success_message'] = "รีเซ็ตรหัสผ่านใหม่สำเร็จ: $new_pw";
+    }
     header("Location: manage_tenants.php"); exit();
 }
 ?>
+
+<style>
+    .tenant-table-card { background: #ffffff !important; color: #0f172a !important; }
+    .tenant-table { --bs-table-bg: #ffffff; --bs-table-color: #0f172a; --bs-table-border-color: #d9e2ec; color: #0f172a !important; }
+    .tenant-table thead th { background: #1f2933 !important; color: #ffffff !important; border-color: #1f2933 !important; }
+    .tenant-table tbody td { background: #ffffff !important; color: #0f172a !important; border-color: #d9e2ec !important; }
+    .tenant-table tbody strong { color: #0f172a !important; }
+    .tenant-table code { color: #dc2626 !important; }
+    html[data-theme="dark"] .tenant-form-body { background: #334155 !important; color: #f8fafc !important; }
+    html[data-theme="light"] .tenant-form-body { background: #eef2f7 !important; color: #0f172a !important; }
+</style>
 
 <div class="container mt-4">
     <h1 class="h3 text-primary fw-bold mb-4"><i class="bi bi-people-fill me-2"></i>จัดการบัญชีผู้เข้าพัก</h1>
 
     <?php if (isset($_SESSION['success_message'])): ?>
         <div class='alert alert-success border-0 shadow-sm alert-dismissible fade show'>
-            <?php echo $_SESSION['success_message']; ?>
+            <?php echo e($_SESSION['success_message']); ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['error_message'])): ?>
+        <div class='alert alert-danger border-0 shadow-sm alert-dismissible fade show'>
+            <?php echo e($_SESSION['error_message']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <?php unset($_SESSION['error_message']); ?>
     <?php endif; ?>
 
     <!-- ฟอร์มเพิ่มผู้เข้าพัก (Dropdown) -->
@@ -95,14 +132,14 @@ if (isset($_GET['reset_id'])) {
         <div class="card-header bg-success text-white fw-bold">
             <i class="bi bi-person-plus-fill me-1"></i> เพิ่มบัญชีผู้เข้าพัก (เฉพาะห้องว่าง)
         </div>
-        <div class="card-body bg-light">
+        <div class="card-body bg-light tenant-form-body">
             <form method="POST" action="manage_tenants.php" class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label class="form-label fw-bold">เลือกเลขห้อง</label>
                     <select name="room_number" class="form-select shadow-sm" required>
                         <option value="" selected disabled>-- เลือกห้องพัก --</option>
                         <?php foreach ($available_rooms as $room): ?>
-                            <option value="<?php echo $room; ?>">ห้อง <?php echo $room; ?></option>
+                            <option value="<?php echo e($room); ?>">ห้อง <?php echo e($room); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -120,9 +157,9 @@ if (isset($_GET['reset_id'])) {
     </div>
 
     <!-- ตารางแสดงรายชื่อ -->
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 tenant-table-card">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 tenant-table">
                 <thead class="table-dark">
                     <tr>
                         <th class="ps-4">เลขห้อง</th>
@@ -134,13 +171,13 @@ if (isset($_GET['reset_id'])) {
                 <tbody>
                     <?php foreach ($tenants as $tenant): ?>
                     <tr>
-                        <td class="ps-4"><strong><?php echo $tenant['username']; ?></strong></td>
-                        <td><?php echo $tenant['full_name']; ?></td>
-                        <td><code class="text-danger fw-bold"><?php echo $tenant['plain_password']; ?></code></td>
+                        <td class="ps-4"><strong><?php echo e($tenant['username']); ?></strong></td>
+                        <td><?php echo e($tenant['full_name']); ?></td>
+                        <td><code class="text-danger fw-bold"><?php echo e($tenant['plain_password']); ?></code></td>
                         <td class="text-center pe-4">
                             <div class="btn-group">
-                                <a href="?reset_id=<?php echo $tenant['id']; ?>" class="btn btn-outline-info btn-sm" onclick="return confirm('รีเซ็ตรหัสผ่าน?')">รีเซ็ต</a>
-                                <a href="?delete_id=<?php echo $tenant['id']; ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('ลบบัญชี?')">ลบ</a>
+                                <a href="?reset_id=<?php echo (int) $tenant['id']; ?>" class="btn btn-outline-info btn-sm" onclick="return confirm('รีเซ็ตรหัสผ่าน?')">รีเซ็ต</a>
+                                <a href="?delete_id=<?php echo (int) $tenant['id']; ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('ลบบัญชี?')">ลบ</a>
                             </div>
                         </td>
                     </tr>
