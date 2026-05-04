@@ -35,5 +35,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     header("Location: login.php?error=1");
     exit();
 }
->>>>>>> b3c7638653082b907eb612c49ef346ef3806ad14
 // ตรวจสอบให้แน่ใจว่าไม่มีช่องว่างหรืออักขระใดๆ หลังโค้ดนี้
