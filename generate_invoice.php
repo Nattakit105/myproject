@@ -138,7 +138,12 @@ $html = '
 </body>
 </html>';
 
+$mpdf_tmp = '/tmp/mpdf';
+if (!is_dir($mpdf_tmp)) mkdir($mpdf_tmp, 0777, true);
+
 $mpdf = new \Mpdf\Mpdf([
+    'tempDir' => $mpdf_tmp,
+>>>>>>> ba37e4e6dda8110a0f8318feeb3d84c507f67045
     'fontDir' => array_merge((new Mpdf\Config\ConfigVariables())->getDefaults()['fontDir'], [__DIR__ . '/custom_fonts']),
     'fontdata' => (new Mpdf\Config\FontVariables())->getDefaults()['fontdata'] + [
         'thsarabun' => [
@@ -159,5 +164,8 @@ $mpdf = new \Mpdf\Mpdf([
 
 $mpdf->WriteHTML($html);
 $mpdf->Output("Invoice-".$record['room_number'].".pdf", "I");
+<<<<<<< HEAD
 >>>>>>> b3c7638653082b907eb612c49ef346ef3806ad14
+=======
+>>>>>>> ba37e4e6dda8110a0f8318feeb3d84c507f67045
 exit();

@@ -18,5 +18,4 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 }
 
 // ถ้าผ่าน... แสดงว่า "ล็อกอินแล้ว"
->>>>>>> b3c7638653082b907eb612c49ef346ef3806ad14
 ?>

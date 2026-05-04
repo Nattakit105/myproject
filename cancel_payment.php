@@ -27,5 +27,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['record_id'])) {
     exit();
 }
 $conn->close();
->>>>>>> b3c7638653082b907eb612c49ef346ef3806ad14
 ?>

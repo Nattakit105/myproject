@@ -1,45 +1,4 @@
-<<<<<<< HEAD
-services:
-  # 1. ส่วนของตู้เซฟ (Database)
-  db:
-    image: mysql:8.0
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: dorm_db  # <--- ตรวจสอบให้ตรงกับ db_connect.php นะครับ
-    volumes:
-      - db_data:/var/lib/mysql
-
-  # 2. ส่วนของเว็บแอปพลิเคชัน (PHP)
-  app:
-    build: .
-    ports:
-      - "8080:80"
-    depends_on:
-      - db
-    environment:
-      DB_HOST: db
-      DB_NAME: dorm_db         # <--- แก้ให้ตรงกันด้วยครับ
-      DB_USER: root
-      DB_PASS: root_password
-
-  # 3. ส่วนของคนดูแลตู้เซฟ (phpMyAdmin) **ต้องอยู่ใต้ services เหมือนกัน**
-  phpmyadmin:
-    image: phpmyadmin:latest
-    restart: always
-    ports:
-      - "8081:80"
-    environment:
-      PMA_HOST: db
-      PMA_USER: root
-      PMA_PASSWORD: root_password
-    depends_on:
-      - db
-
-# ส่วนนี้ไว้นอกสุด ถูกต้องแล้วครับ
-volumes:
-=======
-services:
+﻿services:
   # 1. ส่วนของตู้เซฟ (Database)
   db:
     image: mysql:8.0
@@ -63,6 +22,9 @@ services:
       DB_NAME: dorm_db         # <--- แก้ให้ตรงกันด้วยครับ
       DB_USER: root
       DB_PASS: root_password
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
 
   # 3. ส่วนของคนดูแลตู้เซฟ (phpMyAdmin) **ต้องอยู่ใต้ services เหมือนกัน**
   phpmyadmin:
@@ -79,5 +41,4 @@ services:
 
 # ส่วนนี้ไว้นอกสุด ถูกต้องแล้วครับ
 volumes:
->>>>>>> b3c7638653082b907eb612c49ef346ef3806ad14
   db_data:

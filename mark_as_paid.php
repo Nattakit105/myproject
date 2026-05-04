@@ -33,5 +33,8 @@ if (isset($_GET['id'])) {
 }
 
 $conn->close();
+<<<<<<< HEAD
 >>>>>>> b3c7638653082b907eb612c49ef346ef3806ad14
+=======
+>>>>>>> ba37e4e6dda8110a0f8318feeb3d84c507f67045
 ?>

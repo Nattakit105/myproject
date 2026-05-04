@@ -259,5 +259,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['elec_image'])) {
     exit;
 }
 include 'footer.php'; 
->>>>>>> b3c7638653082b907eb612c49ef346ef3806ad14
 ?>

@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat -ano)",
+      "Bash(findstr \":8080\")",
+      "Bash(Get-Process -Id 39636, 42304 -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object Id, ProcessName, Path)",
+      "PowerShell(Get-Process -Id 39636, 42304 -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Process -Id 39636 -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Process -Id 42304 -ErrorAction SilentlyContinue)",
+      "Bash(docker exec *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "PowerShell(cmdkey /list)",
+      "PowerShell(cmdkey /delete:git:https://github.com 2>&1)",
+      "PowerShell(findstr -i \"github\\\\|git\")",
+      "PowerShell(& \"C:\\\\Program Files\\\\Git\\\\mingw64\\\\bin\\\\git-credential-manager.exe\" get 2>&1)",
+      "PowerShell(& \"C:\\\\Program Files\\\\Git\\\\mingw64\\\\bin\\\\git-credential-manager.exe\" erase 2>&1)",
+      "Bash(git config *)",
+      "Bash(git remote *)",
+      "Bash(git credential *)",
+      "Bash(gh auth *)",
+      "Bash(git reset *)",
+      "Bash(git pull *)",
+      "Bash(git checkout *)",
+      "Bash(python3 -)",
+      "Bash(python -)",
+      "Bash(git restore *)"
+    ]
+  }
+}
