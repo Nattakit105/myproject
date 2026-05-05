@@ -263,7 +263,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
                             <li class="nav-item">
                                 <a class="nav-link <?php echo ($current_page == 'utilities_summary.php') ? 'active' : ''; ?>" href="utilities_summary.php">
-                                    <i class="bi bi-lightning-water"></i> สาธารณูปโภค
+                                    <i class="bi bi-lightning-water"></i> กราฟ
                                 </a>
                             </li>
 

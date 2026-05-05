@@ -153,7 +153,7 @@ while($rm = $room_q->fetch_assoc()){ $rooms_list[] = $rm['room_number']; }
 
 <div class="container-fluid mt-4 px-md-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <h1 class="h3 mb-0 text-primary fw-bold"><i class="bi bi-bar-chart-line-fill me-2"></i>สรุปสาธารณูปโภค</h1>
+        <h1 class="h3 mb-0 text-primary fw-bold"><i class="bi bi-bar-chart-line-fill me-2"></i>กราฟ</h1>
         <div class="utility-toolbar d-flex gap-2 align-items-center flex-wrap">
         <a href="print_utilities.php?month=<?php echo urlencode($selected_month); ?>" target="_blank" class="utility-print-btn btn btn-outline-light d-inline-flex align-items-center px-3 fw-bold"><i class="bi bi-printer me-1"></i>พิมพ์ PDF</a>
         <form action="" method="GET" class="utility-month-form d-flex align-items-center shadow-sm px-3 py-2">
