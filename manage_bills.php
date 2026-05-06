@@ -410,7 +410,7 @@ function meter_image_url($path) {
                                         <div class="text-payment-info">
                                             <i class="bi bi-clock-history text-success"></i><br>
                                             <strong><?php echo date('d/m/Y', strtotime($row['payment_date'])); ?></strong><br>
-                                            <?php echo date('H:i', strtotime($row['payment_date'])); ?> น.
+                                            <?php echo date('H:i', strtotime($row['record_date'])); ?> น.
                                         </div>
                                     <?php else: ?>
                                         <span class="text-muted small">- รอชำระ -</span>
