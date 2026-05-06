@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db
--- Generation Time: May 06, 2026 at 08:15 AM
+-- Generation Time: May 06, 2026 at 08:29 AM
 -- Server version: 8.0.46
 -- PHP Version: 8.3.30
 
@@ -158,22 +158,24 @@ CREATE TABLE `users` (
   `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `plain_password` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `role` varchar(20) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'tenant',
-  `room_price` decimal(10,2) DEFAULT '2500.00'
+  `room_price` decimal(10,2) DEFAULT '2500.00',
+  `occupant_count` int DEFAULT '1',
+  `meter_no` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `full_name`, `password`, `plain_password`, `role`, `room_price`) VALUES
-(1, 'admin', NULL, 'password1234', NULL, 'admin', 2500.00),
-(7, 'admin2', NULL, '$2y$10$CLkbgXpumsrfuDROvC8PjOxiv1L6xfXXwKX24LCRkZr7TRGM9kYqC', NULL, 'admin', 2500.00),
-(40, '101', 'แม้ว', '$2y$10$Gw9kXKKfbYPPc0t.htoliuPWJMKyStnjsYsinoomtTecOIQWFaaMq', 'fenbeq', 'tenant', 2500.00),
-(41, '102', 'แมว', '$2y$10$nvaX0PMLsqDNg6nvUD2a8.0WOTiEKBuhN3gUJRBbMymQdbKB.OqLu', 'aihxzn', 'tenant', 2500.00),
-(42, '103', 'ชินจัง', '$2y$10$D0vlZ1e7mGDPeuXEwhlSiuF0g1aWJdxcBJuarHIni5J6Pf83oTHrK', 'fmjufc', 'tenant', 2500.00),
-(43, '104', 'ต๋องแต๋ง', '$2y$10$PdO7PD1iLW6Ar96E9RTnr.gfnEx4fyIPd9QeNkAsLampJboWO2Nzq', 'e5zr34', 'tenant', 2500.00),
-(56, '105', 'เด', '$2y$10$JuLSd2Ltwicyk68cMi.BdOrRmMg5Cp0YjJ8Bl1TqUO63l1eAPh4Sq', 'sz6a0d', 'tenant', 2500.00),
-(64, '106', 'เก', '$2y$10$DpQmQskgaYYVkbzTE0Ng4.Y4GwStWg7dwZLUxmjFWkfH6N.Uf8C6S', 'y2aarx', 'tenant', 2500.00);
+INSERT INTO `users` (`id`, `username`, `full_name`, `password`, `plain_password`, `role`, `room_price`, `occupant_count`, `meter_no`) VALUES
+(1, 'admin', NULL, 'password1234', NULL, 'admin', 2500.00, 1, NULL),
+(7, 'admin2', NULL, '$2y$10$CLkbgXpumsrfuDROvC8PjOxiv1L6xfXXwKX24LCRkZr7TRGM9kYqC', NULL, 'admin', 2500.00, 1, NULL),
+(40, '101', 'แม้ว', '$2y$10$Gw9kXKKfbYPPc0t.htoliuPWJMKyStnjsYsinoomtTecOIQWFaaMq', 'fenbeq', 'tenant', 2500.00, 1, NULL),
+(41, '102', 'แมว', '$2y$10$nvaX0PMLsqDNg6nvUD2a8.0WOTiEKBuhN3gUJRBbMymQdbKB.OqLu', 'aihxzn', 'tenant', 2500.00, 1, NULL),
+(42, '103', 'ชินจัง', '$2y$10$D0vlZ1e7mGDPeuXEwhlSiuF0g1aWJdxcBJuarHIni5J6Pf83oTHrK', 'fmjufc', 'tenant', 2500.00, 1, NULL),
+(43, '104', 'ต๋องแต๋ง', '$2y$10$PdO7PD1iLW6Ar96E9RTnr.gfnEx4fyIPd9QeNkAsLampJboWO2Nzq', 'e5zr34', 'tenant', 2500.00, 1, NULL),
+(56, '105', 'เด', '$2y$10$JuLSd2Ltwicyk68cMi.BdOrRmMg5Cp0YjJ8Bl1TqUO63l1eAPh4Sq', 'sz6a0d', 'tenant', 2500.00, 1, NULL),
+(64, '106', 'เก', '$2y$10$DpQmQskgaYYVkbzTE0Ng4.Y4GwStWg7dwZLUxmjFWkfH6N.Uf8C6S', 'y2aarx', 'tenant', 2500.00, 1, NULL);
 
 --
 -- Indexes for dumped tables
