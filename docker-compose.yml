@@ -20,18 +20,31 @@
     # ----------------------------------------------------------
     ports:
       - "8082:80"
-    depends_on:
-      - db
     environment:
       DB_HOST: db
       DB_NAME: dorm_db
       DB_USER: root
       DB_PASS: root_password
+      OCR_SERVICE_URL: http://ocr:5000/scan
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
+    depends_on:
+      - db
+      - ocr
 
-  # 3. ส่วนของคนดูแลตู้เซฟ (phpMyAdmin)
+  # 3. ส่วนของระบบ OCR
+  ocr:
+    build:
+      context: .
+      dockerfile: Dockerfile.ocr
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "5000:5000"
+
+  # 4. ส่วนของคนดูแลตู้เซฟ (phpMyAdmin)
   phpmyadmin:
     image: phpmyadmin:latest
     restart: always

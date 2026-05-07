@@ -44,7 +44,7 @@ if ($selected_room && !in_array($selected_room, $available_rooms)) {
 }
 
 // --- 2. การจัดการข้อมูล (POST/GET) ---
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_tenant'])) {
+if (($_SERVER["REQUEST_METHOD"] ?? '') == "POST" && isset($_POST['add_tenant'])) {
     $room_number = $_POST['room_number'];
     $full_name = $_POST['full_name'];
     $occupant_count = $_POST['occupant_count']; // รับค่าจำนวนคนพัก
