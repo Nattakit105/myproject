@@ -5,7 +5,7 @@
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: dorm_db  # <--- ตรวจสอบให้ตรงกับ db_connect.php นะครับ
+      MYSQL_DATABASE: dorm_db
     volumes:
       - db_data:/var/lib/mysql
       - ./dorm_db.sql.sql:/docker-entrypoint-initdb.d/init.sql
@@ -13,20 +13,25 @@
   # 2. ส่วนของเว็บแอปพลิเคชัน (PHP)
   app:
     build: .
+    # --- [เพิ่มส่วนนี้] ช่วยให้ Docker หาทางออกไปโหลด Python ได้สำเร็จ ---
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    # ----------------------------------------------------------
     ports:
       - "8082:80"
     depends_on:
       - db
     environment:
       DB_HOST: db
-      DB_NAME: dorm_db         # <--- แก้ให้ตรงกันด้วยครับ
+      DB_NAME: dorm_db
       DB_USER: root
       DB_PASS: root_password
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
 
-  # 3. ส่วนของคนดูแลตู้เซฟ (phpMyAdmin) **ต้องอยู่ใต้ services เหมือนกัน**
+  # 3. ส่วนของคนดูแลตู้เซฟ (phpMyAdmin)
   phpmyadmin:
     image: phpmyadmin:latest
     restart: always
@@ -39,6 +44,6 @@
     depends_on:
       - db
 
-# ส่วนนี้ไว้นอกสุด ถูกต้องแล้วครับ
+# ส่วนของที่เก็บข้อมูล
 volumes:
   db_data:

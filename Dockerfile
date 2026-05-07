@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install mysqli gd zip
-
+RUN apt-get update && apt-get install -y python3 python3-pip libgl1-mesa-glx libglib2.0-0 && \
+    pip3 install opencv-python-headless numpy --break-system-packages
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 RUN a2enmod rewrite

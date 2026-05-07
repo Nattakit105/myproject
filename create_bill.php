@@ -5,7 +5,6 @@ include 'db_connect.php';
 
 if ($_SESSION['role'] !== 'admin') { die("Access Denied!"); }
 
-// 🔥 [เพิ่ม] รับค่าเลขห้องที่ส่งมาจากหน้า Dashboard (ถ้ามี)
 $prefill_room = isset($_GET['room']) ? htmlspecialchars($_GET['room']) : '';
 
 $tenant_rooms = [];
@@ -17,147 +16,110 @@ $conn->close();
 ?>
 
 <div class="container mt-4" style="max-width: 700px;">
-    <div class="card shadow border-0 rounded-3">
+    <div class="card shadow border-0 rounded-3 text-dark">
         <div class="card-header bg-primary text-white text-center py-3">
-            <h1 class="h4 mb-0"><i class="bi bi-calculator me-2"></i>บันทึกบิลใหม่</h1>
+            <h1 class="h4 mb-0"><i class="bi bi-cpu-fill me-2"></i>บันทึกบิลด้วยระบบ AI OCR</h1>
         </div>
-        <div class="card-body p-4">
-            <form action="calculate.php" method="post" enctype="multipart/form-data" id="meterUploadForm">
+        <div class="card-body p-4 bg-white">
+            <form action="calculate.php" method="post" enctype="multipart/form-data">
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label class="form-label fw-bold">เลือกห้องพัก</label>
+                        <label class="form-label fw-bold">เลขห้อง</label>
                         <select class="form-select" id="room_number" name="room_number" required>
                             <option value="">-- เลือกห้อง --</option>
                             <?php foreach ($tenant_rooms as $room): ?>
-                                <option value="<?php echo htmlspecialchars($room); ?>" <?php echo ($prefill_room == $room) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($room); ?>
+                                <option value="<?= htmlspecialchars($room); ?>" <?= ($prefill_room == $room) ? 'selected' : ''; ?>>
+                                    <?= htmlspecialchars($room); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label fw-bold">จำนวนคนพัก</label>
-                        <input type="number" class="form-control" name="num_people" value="1" min="1" required>
+                        <label class="form-label fw-bold">คนพัก</label>
+                        <input type="number" class="form-control" name="num_people" id="num_people" value="1" readonly>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label fw-bold">ประจำเดือน</label>
-                        <input type="month" class="form-control" name="billing_month" value="<?php echo date('Y-m'); ?>" required>
+                        <input type="month" class="form-control" name="billing_month" value="<?= date('Y-m'); ?>">
                     </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label fw-bold text-primary">💰 ค่าเช่าห้องพื้นฐาน (บาท)</label>
-                    <input type="number" step="0.01" class="form-control bg-light" name="room_rent" value="2500.00" required>
                 </div>
 
                 <div class="bg-light p-3 rounded border mb-4 shadow-sm">
-                    <h6 class="text-danger fw-bold mb-3 border-bottom pb-2"><i class="bi bi-lightning-charge-fill"></i> ข้อมูลมิเตอร์ไฟฟ้า</h6>
+                    <h6 class="text-danger fw-bold mb-3 border-bottom pb-2">🔋 ข้อมูลมิเตอร์ไฟฟ้า</h6>
+                    
                     <div class="mb-3">
-                        <label class="form-label text-dark">เลขมิเตอร์ครั้งก่อน <strong>(แก้ไขได้หากไม่ถูกต้อง)</strong></label>
-                        <input type="number" step="0.1" class="form-control border-danger" id="elec_prev" name="elec_prev" value="0" required>
-                        <div id="status" class="mt-1 fw-bold" style="font-size: 0.85rem;"></div>
+                        <label class="form-label">เลือกรูปมิเตอร์เพื่อสแกน</label>
+                        <input class="form-control border-primary" type="file" id="elec_image_input" accept="image/*">
+                        <button type="button" class="btn btn-info btn-sm mt-2 w-100 fw-bold" id="btn_scan_ai">
+                            <i class="bi bi-search"></i> เริ่มสแกนตัวเลขด้วย AI
+                        </button>
                     </div>
-                    <div class="mb-2">
-                        <label class="form-label  text-dark">อัปโหลดรูปมิเตอร์ไฟฟ้าปัจจุบัน</label>
-                        <input class="form-control border-primary" type="file" name="elec_image" accept="image/*" required>
+
+                    <div class="row">
+                        <div class="col-6">
+                            <label class="form-label small">เลขครั้งก่อน</label>
+                            <input type="number" class="form-control bg-secondary text-white" id="elec_prev" name="elec_prev" readonly>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-primary fw-bold">เลขครั้งนี้ (AI อ่านให้)</label>
+                            <input type="number" step="0.1" class="form-control border-primary fw-bold" id="elec_current" name="elec_current" required>
+                        </div>
                     </div>
                 </div>
 
                 <div class="d-grid">
-                    <button type="submit" class="btn btn-primary btn-lg shadow fw-bold" id="calculateBtn">คำนวณค่าห้อง</button>
+                    <button type="submit" class="btn btn-primary btn-lg shadow fw-bold">คำนวณและออกบิล</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<div id="processingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="background: rgba(15, 23, 42, 0.78); z-index: 2000;">
-    <div class="d-flex align-items-center justify-content-center h-100 px-3">
-        <div class="bg-white rounded-3 shadow-lg p-4 w-100" style="max-width: 460px;">
-            <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
-                <div>
-                    <h2 class="h5 mb-1 fw-bold text-primary">กำลังประมวลผลรูปมิเตอร์</h2>
-                    <div class="text-muted small">อัปโหลดรูปและอ่านตัวเลขด้วยระบบ OCR/AI</div>
-                </div>
-            </div>
-            <div class="progress" style="height: 10px;">
-                <div id="processingBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 20%;"></div>
-            </div>
-            <div id="processingText" class="small text-secondary mt-3">กำลังเตรียมข้อมูล...</div>
-        </div>
+<div id="processingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="background: rgba(0,0,0,0.8); z-index: 9999;">
+    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-white">
+        <div class="spinner-border text-primary mb-3" role="status"></div>
+        <h5 id="process_text">AI กำลังอ่านตัวเลขจากรูป...</h5>
     </div>
 </div>
 
 <script>
-// ฟังก์ชันดึงข้อมูลมิเตอร์และค่าเช่า
-function fetchRoomInfo(room) {
-    const meterInput = document.getElementById('elec_prev');
-    const rentInput = document.getElementsByName('room_rent')[0];
-    const status = document.getElementById('status');
-    
-    if(!room) { 
-        meterInput.value = 0; 
-        status.textContent = ''; 
-        return; 
-    }
-
-    status.textContent = '⌛ กำลังดึงข้อมูล...';
-    status.className = 'text-muted small';
-    
+// ระบบดึงข้อมูลห้องอัตโนมัติ
+document.getElementById('room_number').addEventListener('change', function() {
+    const room = this.value;
+    if(!room) return;
     fetch(`get_previous_meter.php?room=${room}`)
         .then(res => res.json())
         .then(data => {
-            meterInput.value = data.previous_meter;
-            if(rentInput && data.room_price) {
-                rentInput.value = parseFloat(data.room_price).toFixed(2);
-            }
-            status.textContent = '✅ ดึงข้อมูลสำเร็จ';
-            status.className = 'text-success small';
-        })
-        .catch(err => {
-            status.textContent = '❌ ดึงข้อมูลไม่สำเร็จ';
-            status.className = 'text-danger small';
+            document.getElementById('elec_prev').value = data.previous_meter;
+            document.getElementById('num_people').value = data.occupant_count || 1;
         });
-}
-
-// ตรวจสอบเมื่อมีการเปลี่ยนห้อง
-document.getElementById('room_number').addEventListener('change', function() {
-    fetchRoomInfo(this.value);
 });
 
-// 🔥 [เพิ่ม] ถ้ามีการส่งค่าห้องมาจากหน้า Dashboard ให้รันฟังก์ชันดึงข้อมูลทันที
-window.addEventListener('DOMContentLoaded', (event) => {
-    const prefilledRoom = document.getElementById('room_number').value;
-    if(prefilledRoom) {
-        fetchRoomInfo(prefilledRoom);
-    }
-});
+// ระบบ AI OCR
+document.getElementById('btn_scan_ai').addEventListener('click', function() {
+    const fileInput = document.getElementById('elec_image_input');
+    if (fileInput.files.length === 0) { alert('กรุณาเลือกรูปก่อนครับ ตะวัน'); return; }
 
-document.getElementById('meterUploadForm').addEventListener('submit', function() {
     const overlay = document.getElementById('processingOverlay');
-    const bar = document.getElementById('processingBar');
-    const text = document.getElementById('processingText');
-    const btn = document.getElementById('calculateBtn');
-    const steps = [
-        { width: 35, text: 'กำลังอัปโหลดรูปมิเตอร์...' },
-        { width: 62, text: 'กำลังอ่านตัวเลขจากรูป...' },
-        { width: 84, text: 'กำลังเตรียมหน้าตรวจสอบผลลัพธ์...' }
-    ];
-    let index = 0;
-
     overlay.classList.remove('d-none');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>กำลังคำนวณ...';
 
-    window.setInterval(function() {
-        const step = steps[Math.min(index, steps.length - 1)];
-        bar.style.width = step.width + '%';
-        text.textContent = step.text;
-        index++;
-    }, 900);
+    const formData = new FormData();
+    formData.append('image', fileInput.files[0]);
+
+    fetch('process_ocr.php', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+        overlay.classList.add('d-none');
+        if(data.success) {
+            document.getElementById('elec_current').value = data.detected_number;
+            alert('สแกนสำเร็จ! ได้ค่า: ' + data.detected_number);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(err => {
+        overlay.classList.add('d-none');
+        alert('ไม่สามารถเชื่อมต่อระบบ OCR ได้');
+    });
 });
-
 </script>
-
-<?php include 'footer.php'; ?>
