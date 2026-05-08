@@ -37,11 +37,21 @@ while($row = $result->fetch_assoc()) {
 
 $available_rooms = array_diff($all_rooms, $occupied_rooms);
 
-// --- ตรวจสอบห้องที่ส่งมาจาก index ---
-$selected_room = isset($_GET['add_room']) ? (string)trim($_GET['add_room']) : '';
-if ($selected_room && !in_array($selected_room, $available_rooms)) {
-    $selected_room = '';
+// รับค่าเลขห้องจาก URL parameter (จาก index.php)
+$selected_room = '';
+if (isset($_GET['room_number'])) {
+    $selected_room = (string)trim($_GET['room_number']);
+} elseif (isset($_GET['add_room'])) {
+    $selected_room = (string)trim($_GET['add_room']);
 }
+
+// สร้าง list ของห้องให้แสดง (ห้องว่าง + ห้องที่เลือก)
+$display_rooms = $available_rooms;
+if ($selected_room && !in_array($selected_room, $display_rooms)) {
+    $display_rooms[] = $selected_room;
+    sort($display_rooms, SORT_NUMERIC);
+}
+
 
 // --- 2. การจัดการข้อมูล (POST/GET) ---
 if (($_SERVER["REQUEST_METHOD"] ?? '') == "POST" && isset($_POST['add_tenant'])) {
@@ -133,9 +143,9 @@ if (isset($_GET['reset_id'])) {
                 <div class="col-md-3">
                     <label class="form-label fw-bold">เลือกเลขห้อง</label>
                     <select name="room_number" class="form-select shadow-sm" required>
-                        <option value="" <?php echo empty($selected_room) ? 'selected disabled' : ''; ?>>-- เลือกห้อง --</option>
-                        <?php foreach ($available_rooms as $room): ?>
-                            <option value="<?php echo e($room); ?>" <?php echo ($room === $selected_room) ? 'selected' : ''; ?>>ห้อง <?php echo e($room); ?></option>
+                        <option value="">-- เลือกห้องพัก --</option>
+                        <?php foreach ($display_rooms as $room): ?>
+                            <option value="<?php echo e($room); ?>" <?php echo ($selected_room === $room) ? 'selected' : ''; ?>>ห้อง <?php echo e($room); ?><?php echo (!in_array($room, $available_rooms) ? ' (มีคนพักแล้ว)' : ''); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
